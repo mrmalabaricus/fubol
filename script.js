@@ -9,7 +9,7 @@ const field = {
   height: canvas.height,
   goalWidth: 220,
   goalDepth: 28,
-  boxDepth: 110,
+  boxDepth: 130,
   center: { x: canvas.width / 2, y: canvas.height / 2 },
 };
 
@@ -618,7 +618,7 @@ function keepPlayersOutOfGoalBoxes() {
       }
     }
 
-    const rebound = 0.5;
+    const rebound = 0.25;
     if (allowInside) {
       player.x -= nx * overlap;
       player.y -= ny * overlap;
@@ -632,8 +632,14 @@ function keepPlayersOutOfGoalBoxes() {
     }
   };
 
-  teams[0].players.forEach((player) => resolveBoxOverlap(player, leftBox, false));
-  teams[1].players.forEach((player) => resolveBoxOverlap(player, rightBox, false));
+  teams[0].players.forEach((player) => {
+    resolveBoxOverlap(player, leftBox, false);
+    resolveBoxOverlap(player, rightBox, false);
+  });
+  teams[1].players.forEach((player) => {
+    resolveBoxOverlap(player, leftBox, false);
+    resolveBoxOverlap(player, rightBox, false);
+  });
   if (teams[0].goalie) {
     resolveBoxOverlap(teams[0].goalie, leftBox, true);
   }
