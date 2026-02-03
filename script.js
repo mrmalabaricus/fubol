@@ -216,6 +216,7 @@ const state = {
   turnInProgress: false,
   started: false,
   confetti: [],
+  goalPause: false,
 };
 
 const physics = {
@@ -652,6 +653,9 @@ function getGoalBox(teamIndex) {
 }
 
 function keepBallInBounds() {
+  if (state.goalPause) {
+    return;
+  }
   const goalTop = field.center.y - field.goalWidth / 2;
   const goalBottom = field.center.y + field.goalWidth / 2;
   if (ball.y - ball.radius < 30 || ball.y + ball.radius > field.height - 30) {
@@ -772,11 +776,16 @@ function handlePlayerCollisions(entities) {
 }
 
 function score(teamIndex) {
+  if (state.goalPause) return;
   spawnConfetti(teamIndex);
+  state.goalPause = true;
   state.scores[teamIndex] += 1;
   scoreEl.textContent = `${state.scores[0]} - ${state.scores[1]}`;
   setWinner();
-  resetPositions(teamIndex);
+  setTimeout(() => {
+    resetPositions(teamIndex);
+    state.goalPause = false;
+  }, 500);
 }
 
 function allStopped() {
@@ -823,12 +832,12 @@ function update() {
     requestAnimationFrame(update);
     return;
   }
-  if (!state.winner) {
+  if (!state.winner && !state.goalPause) {
     applyPhysics();
   }
   updateConfetti();
 
-  if (!state.dragging && allStopped() && state.turnInProgress) {
+  if (!state.dragging && allStopped() && state.turnInProgress && !state.goalPause) {
     nextTurn();
     state.turnInProgress = false;
   }
@@ -840,7 +849,7 @@ function update() {
 function spawnConfetti(teamIndex) {
   const goalX = teamIndex === 0 ? field.width - 40 : 40;
   const goalY = field.center.y;
-  const colors = ["#ffd66b", "#ff7b7b", "#4aa3ff", "#57ff99", "#ffffff"];
+  const colors = ["#ffffff"];
   const count = 60;
   for (let i = 0; i < count; i += 1) {
     const angle = (Math.PI / 2) * Math.random() - Math.PI / 4;
