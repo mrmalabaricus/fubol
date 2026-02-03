@@ -66,6 +66,17 @@ function drawImageOrPlaceholder(src, x, y, width, height, color) {
   }
 }
 
+function drawFieldBackground() {
+  drawImageOrPlaceholder(
+    assets.field,
+    0,
+    0,
+    field.width,
+    field.height,
+    "#1c6e3a"
+  );
+}
+
 const goalkeeperProfiles = {
   golero1: { name: "Golero 1", strength: 1.05, speed: 0.7, maxHealth: 140 },
   golero2: { name: "Golero 2", strength: 1.2, speed: 0.6, maxHealth: 150 },
@@ -458,6 +469,7 @@ function setWinner() {
 
 function drawField() {
   ctx.clearRect(0, 0, field.width, field.height);
+  drawFieldBackground();
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
   ctx.lineWidth = 2;
@@ -511,7 +523,9 @@ function drawPlayer(player) {
   );
   ctx.lineWidth = 2;
   ctx.strokeStyle = player === state.selected ? "#ffffff" : "rgba(0,0,0,0.2)";
-  ctx.strokeRect(player.x - size / 2, player.y - size / 2, size, size);
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+  ctx.stroke();
 
   drawHealthBar(player);
   if (player.koTurns > 0) {
