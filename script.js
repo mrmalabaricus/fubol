@@ -505,8 +505,23 @@ function applyPhysics() {
 
     if (entity !== ball) {
       const padding = 30;
-      entity.x = clamp(entity.x, padding, field.width - padding);
-      entity.y = clamp(entity.y, padding, field.height - padding);
+      const rebound = 0.6;
+      if (entity.x - entity.radius < padding) {
+        entity.x = padding + entity.radius;
+        entity.vx = Math.abs(entity.vx) * rebound;
+      }
+      if (entity.x + entity.radius > field.width - padding) {
+        entity.x = field.width - padding - entity.radius;
+        entity.vx = -Math.abs(entity.vx) * rebound;
+      }
+      if (entity.y - entity.radius < padding) {
+        entity.y = padding + entity.radius;
+        entity.vy = Math.abs(entity.vy) * rebound;
+      }
+      if (entity.y + entity.radius > field.height - padding) {
+        entity.y = field.height - padding - entity.radius;
+        entity.vy = -Math.abs(entity.vy) * rebound;
+      }
     }
   });
 
