@@ -1,0 +1,106 @@
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0a0f15;
+  color: #f5f5f5;
+}
+
+.game {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hud {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.scoreboard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.team {
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.team-a {
+  background: rgba(63, 133, 255, 0.2);
+  border: 1px solid #3f85ff;
+}
+
+.team-b {
+  background: rgba(255, 87, 87, 0.2);
+  border: 1px solid #ff5757;
+}
+
+.status {
+  font-size: 16px;
+  color: #b5c4d4;
+}
+
+.win {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffd66b;
+}
+
+.playfield {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+.field-wrap {
+  padding: 18px;
+  background: radial-gradient(circle at center, #1c6e3a 0%, #0d3a1c 65%, #0a2a14 100%);
+  border-radius: 24px;
+  border: 2px solid #214b2a;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+canvas {
+  width: 100%;
+  background: transparent;
+  border-radius: 16px;
+  display: block;
+  touch-action: none;
+}
+
+.panel {
+  background: rgba(15, 24, 36, 0.85);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 16px;
+  color: #f0f7ff;
+}
+
+.panel ul {
+  padding-left: 18px;
+}
+
+.panel li {
+  margin-bottom: 8px;
+}
