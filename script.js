@@ -474,6 +474,9 @@ function drawPlayer(player) {
   if (player.koTurns > 0) {
     drawKoStars(player);
   }
+  if (player.paralyzedTurns > 0) {
+    drawParalyzeRay(player);
+  }
 }
 
 function drawHealthBar(player) {
@@ -525,6 +528,19 @@ function drawStar(cx, cy, outerRadius, points) {
   ctx.fill();
   ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
   ctx.stroke();
+}
+
+function drawParalyzeRay(player) {
+  const rayWidth = 18;
+  const rayHeight = 36;
+  const x = player.x - rayWidth / 2;
+  const y = player.y - player.radius - rayHeight - 8;
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 255, 200, 0.9)";
+  ctx.fillRect(x, y, rayWidth, rayHeight);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+  ctx.strokeRect(x, y, rayWidth, rayHeight);
+  ctx.restore();
 }
 
 function drawBall() {
