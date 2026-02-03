@@ -440,6 +440,9 @@ function drawPlayer(player) {
   ctx.stroke();
 
   drawHealthBar(player);
+  if (player.koTurns > 0) {
+    drawKoStars(player);
+  }
 }
 
 function drawHealthBar(player) {
@@ -457,6 +460,40 @@ function drawHealthBar(player) {
   ctx.fillRect(x, y, barWidth * healthRatio, barHeight);
   ctx.strokeStyle = "rgba(255,255,255,0.6)";
   ctx.strokeRect(x, y, barWidth, barHeight);
+}
+
+function drawKoStars(player) {
+  const starCount = 3;
+  const radius = 6;
+  const spacing = 16;
+  const startX = player.x - ((starCount - 1) * spacing) / 2;
+  const y = player.y - player.radius - 28;
+
+  for (let i = 0; i < starCount; i += 1) {
+    drawStar(startX + i * spacing, y, radius, 5);
+  }
+}
+
+function drawStar(cx, cy, outerRadius, points) {
+  const innerRadius = outerRadius * 0.5;
+  const step = Math.PI / points;
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i += 1) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = i * step - Math.PI / 2;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+  ctx.fillStyle = "#ffd66b";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.stroke();
 }
 
 function drawBall() {
