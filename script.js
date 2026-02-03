@@ -816,11 +816,29 @@ function getMousePos(event) {
 }
 
 function selectPlayerAt(pos) {
-  const candidates = teams[state.turn].players;
+  const candidates = [...teams[state.turn].players];
+  if (canUseGoalie()) {
+    candidates.push(teams[state.turn].goalie);
+  }
   const hit = candidates.find(
     (player) => Math.hypot(player.x - pos.x, player.y - pos.y) <= player.radius
   );
   state.selected = hit || null;
+}
+
+function canUseGoalie() {
+  if (!teams[state.turn].goalie) return false;
+  return isBallInsideGoalBox(state.turn);
+}
+
+function isBallInsideGoalBox(teamIndex) {
+  const goalBox = getGoalBox(teamIndex);
+  return (
+    ball.x >= goalBox.x &&
+    ball.x <= goalBox.x + goalBox.width &&
+    ball.y >= goalBox.y &&
+    ball.y <= goalBox.y + goalBox.height
+  );
 }
 
 canvas.addEventListener("pointerdown", (event) => {
