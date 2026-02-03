@@ -619,16 +619,21 @@ function keepPlayersOutOfGoalBoxes() {
     }
 
     const rebound = 0.25;
+    const useRebound = !player.isGoalie;
     if (allowInside) {
       player.x -= nx * overlap;
       player.y -= ny * overlap;
-      player.vx = -nx * Math.abs(player.vx) * rebound;
-      player.vy = -ny * Math.abs(player.vy) * rebound;
+      if (useRebound) {
+        player.vx = -nx * Math.abs(player.vx) * rebound;
+        player.vy = -ny * Math.abs(player.vy) * rebound;
+      }
     } else {
       player.x += nx * overlap;
       player.y += ny * overlap;
-      player.vx = nx * Math.abs(player.vx) * rebound;
-      player.vy = ny * Math.abs(player.vy) * rebound;
+      if (useRebound) {
+        player.vx = nx * Math.abs(player.vx) * rebound;
+        player.vy = ny * Math.abs(player.vy) * rebound;
+      }
     }
   };
 
