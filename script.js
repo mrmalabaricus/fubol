@@ -902,7 +902,7 @@ function score(teamIndex) {
   setTimeout(() => {
     resetPositions(teamIndex);
     state.goalPause = false;
-  }, 500);
+  }, 900);
 }
 
 function allStopped() {
@@ -1184,6 +1184,7 @@ function shouldRunCpuTurn() {
     state.started &&
     state.mode === "cpu" &&
     state.turn === 1 &&
+    state.winner === null &&
     !state.dragging &&
     !state.turnInProgress &&
     allStopped() &&
