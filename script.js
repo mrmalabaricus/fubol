@@ -277,7 +277,6 @@ function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
 function setupPlayers() {
   const spacingY = 90;
   const startY = field.center.y - spacingY * 1.5;
-  const offsetX = 180;
   const lineups = {
     teamA: ["jugador01", "jugador02", "jugador03", "jugador04"],
     teamB: ["jugador12", "jugador11", "jugador10", "jugador09"],
@@ -285,18 +284,20 @@ function setupPlayers() {
   const getPlayer = (id) => rosterPlayers.find((player) => player.id === id);
   const teamAPlayers = lineups.teamA.map((id) => getPlayer(id));
   const teamBPlayers = lineups.teamB.map((id) => getPlayer(id));
+  const formationA = getFormationPositions(0);
+  const formationB = getFormationPositions(1);
 
   teams[0].players = Array.from({ length: 4 }, (_, i) =>
-    createPlayer(0, offsetX, startY + spacingY * i, teamAPlayers[i])
+    createPlayer(0, formationA[i].x, formationA[i].y, teamAPlayers[i])
   );
   teams[1].players = Array.from({ length: 4 }, (_, i) =>
-    createPlayer(1, field.width - offsetX, startY + spacingY * i, teamBPlayers[i])
+    createPlayer(1, formationB[i].x, formationB[i].y, teamBPlayers[i])
   );
 
   const goalieA = rosterGoalkeepers.find((goalie) => goalie.id === "golero1");
   const goalieB = rosterGoalkeepers.find((goalie) => goalie.id === "golero2");
-  teams[0].goalie = createPlayer(0, 60, field.center.y, goalieA, true);
-  teams[1].goalie = createPlayer(1, field.width - 60, field.center.y, goalieB, true);
+  teams[0].goalie = createPlayer(0, formationA.goalie.x, formationA.goalie.y, goalieA, true);
+  teams[1].goalie = createPlayer(1, formationB.goalie.x, formationB.goalie.y, goalieB, true);
 }
 
 function resetPositions(scoringTeam) {
@@ -305,29 +306,30 @@ function resetPositions(scoringTeam) {
   ball.vx = 0;
   ball.vy = 0;
 
-  const offsetX = 180;
+  const formationA = getFormationPositions(0);
+  const formationB = getFormationPositions(1);
   teams[0].players.forEach((player, i) => {
-    player.x = offsetX;
-    player.y = field.center.y - 135 + i * 90;
+    player.x = formationA[i].x;
+    player.y = formationA[i].y;
     player.vx = 0;
     player.vy = 0;
     player.health = player.maxHealth;
   });
   teams[1].players.forEach((player, i) => {
-    player.x = field.width - offsetX;
-    player.y = field.center.y - 135 + i * 90;
+    player.x = formationB[i].x;
+    player.y = formationB[i].y;
     player.vx = 0;
     player.vy = 0;
     player.health = player.maxHealth;
   });
 
-  teams[0].goalie.x = 60;
-  teams[0].goalie.y = field.center.y;
+  teams[0].goalie.x = formationA.goalie.x;
+  teams[0].goalie.y = formationA.goalie.y;
   teams[0].goalie.vx = 0;
   teams[0].goalie.vy = 0;
   teams[0].goalie.health = teams[0].goalie.maxHealth;
-  teams[1].goalie.x = field.width - 60;
-  teams[1].goalie.y = field.center.y;
+  teams[1].goalie.x = formationB.goalie.x;
+  teams[1].goalie.y = formationB.goalie.y;
   teams[1].goalie.vx = 0;
   teams[1].goalie.vy = 0;
   teams[1].goalie.health = teams[1].goalie.maxHealth;
@@ -337,6 +339,26 @@ function resetPositions(scoringTeam) {
   state.turnInProgress = false;
   state.turn = scoringTeam === null ? state.turn : scoringTeam === 0 ? 1 : 0;
   updateStatus();
+}
+
+function getFormationPositions(teamIndex) {
+  const spacingY = 90;
+  const startY = field.center.y - spacingY * 1.5;
+  const goalieX = teamIndex === 0 ? 60 : field.width - 60;
+  const defenderX = teamIndex === 0 ? 160 : field.width - 160;
+  const midfielderX = teamIndex === 0 ? 280 : field.width - 280;
+
+  return Object.assign(
+    [
+      { x: defenderX, y: startY + spacingY * 0 },
+      { x: defenderX, y: startY + spacingY * 1 },
+      { x: midfielderX, y: startY + spacingY * 2 },
+      { x: midfielderX, y: startY + spacingY * 3 },
+    ],
+    {
+      goalie: { x: goalieX, y: field.center.y },
+    }
+  );
 }
 
 function updateStatus() {
