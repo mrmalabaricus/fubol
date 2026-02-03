@@ -227,7 +227,7 @@ const physics = {
   minSpeed: 0.12,
   maxPower: 12,
   playerDamageScale: 6,
-  goalieDamageScale: 0.6,
+  goalieDamageScale: 0,
   koTurns: 2,
   playerBounceScale: 0.55,
   collisionDamageMin: 0.6,
