@@ -215,6 +215,7 @@ const state = {
   winner: null,
   turnInProgress: false,
   started: false,
+  confetti: [],
 };
 
 const physics = {
@@ -547,6 +548,7 @@ function draw() {
   teams.forEach((team) => drawPlayer(team.goalie));
   drawBall();
   drawAimGuide();
+  drawConfetti();
 }
 
 function clamp(value, min, max) {
@@ -770,6 +772,7 @@ function handlePlayerCollisions(entities) {
 }
 
 function score(teamIndex) {
+  spawnConfetti(teamIndex);
   state.scores[teamIndex] += 1;
   scoreEl.textContent = `${state.scores[0]} - ${state.scores[1]}`;
   setWinner();
@@ -823,6 +826,7 @@ function update() {
   if (!state.winner) {
     applyPhysics();
   }
+  updateConfetti();
 
   if (!state.dragging && allStopped() && state.turnInProgress) {
     nextTurn();
@@ -831,6 +835,51 @@ function update() {
 
   draw();
   requestAnimationFrame(update);
+}
+
+function spawnConfetti(teamIndex) {
+  const goalX = teamIndex === 0 ? field.width - 40 : 40;
+  const goalY = field.center.y;
+  const colors = ["#ffd66b", "#ff7b7b", "#4aa3ff", "#57ff99", "#ffffff"];
+  const count = 60;
+  for (let i = 0; i < count; i += 1) {
+    const angle = (Math.PI / 2) * Math.random() - Math.PI / 4;
+    const speed = 3 + Math.random() * 4;
+    state.confetti.push({
+      x: goalX,
+      y: goalY,
+      vx: Math.cos(angle) * speed * (teamIndex === 0 ? -1 : 1),
+      vy: -Math.sin(angle) * speed - 2,
+      size: 4 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 80 + Math.random() * 40,
+      rotation: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.2,
+    });
+  }
+}
+
+function updateConfetti() {
+  state.confetti.forEach((piece) => {
+    piece.x += piece.vx;
+    piece.y += piece.vy;
+    piece.vy += 0.08;
+    piece.vx *= 0.99;
+    piece.rotation += piece.spin;
+    piece.life -= 1;
+  });
+  state.confetti = state.confetti.filter((piece) => piece.life > 0);
+}
+
+function drawConfetti() {
+  state.confetti.forEach((piece) => {
+    ctx.save();
+    ctx.translate(piece.x, piece.y);
+    ctx.rotate(piece.rotation);
+    ctx.fillStyle = piece.color;
+    ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size);
+    ctx.restore();
+  });
 }
 
 function getMousePos(event) {
