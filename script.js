@@ -7,9 +7,9 @@ const winEl = document.getElementById("win");
 const field = {
   width: canvas.width,
   height: canvas.height,
-  goalWidth: 180,
+  goalWidth: 220,
   goalDepth: 28,
-  boxDepth: 80,
+  boxDepth: 110,
   center: { x: canvas.width / 2, y: canvas.height / 2 },
 };
 
@@ -618,15 +618,18 @@ function keepPlayersOutOfGoalBoxes() {
       }
     }
 
+    const rebound = 0.5;
     if (allowInside) {
       player.x -= nx * overlap;
       player.y -= ny * overlap;
+      player.vx = -nx * Math.abs(player.vx) * rebound;
+      player.vy = -ny * Math.abs(player.vy) * rebound;
     } else {
       player.x += nx * overlap;
       player.y += ny * overlap;
+      player.vx = nx * Math.abs(player.vx) * rebound;
+      player.vy = ny * Math.abs(player.vy) * rebound;
     }
-    player.vx *= 0.6;
-    player.vy *= 0.6;
   };
 
   teams[0].players.forEach((player) => resolveBoxOverlap(player, leftBox, false));
