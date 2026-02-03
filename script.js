@@ -227,12 +227,15 @@ const physics = {
   minSpeed: 0.12,
   maxPower: 12,
   playerDamageScale: 6,
+  goalieDamageScale: 0.6,
   koTurns: 2,
   playerBounceScale: 0.55,
   collisionDamageMin: 0.6,
   itemRadius: 12,
   itemSpawnChance: 0.35,
   itemBounce: 0.4,
+  itemEffectTurns: 2,
+  goalWallShrink: 0.6,
 };
 
 const teams = [
@@ -438,12 +441,13 @@ function drawGoalBox(teamIndex) {
 }
 
 function drawGoal(teamIndex) {
-  const goalY = field.center.y - field.goalWidth / 2;
+  const goalMouth = getGoalMouth(teamIndex);
+  const goalY = goalMouth.top;
   const x = teamIndex === 0 ? 30 - field.goalDepth : field.width - 30;
   ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-  ctx.fillRect(x, goalY, field.goalDepth, field.goalWidth);
+  ctx.fillRect(x, goalY, field.goalDepth, goalMouth.height);
   ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-  ctx.strokeRect(x, goalY, field.goalDepth, field.goalWidth);
+  ctx.strokeRect(x, goalY, field.goalDepth, goalMouth.height);
 }
 
 function drawPlayer(player) {
@@ -554,10 +558,19 @@ function drawItems() {
 
 function drawGoalWalls() {
   state.goalWalls.forEach((wall) => {
-    const box = getGoalBox(wall.teamIndex);
-    const wallX = wall.teamIndex === 0 ? box.x : box.x + box.width - 10;
+    const goalMouth = getGoalMouth(wall.teamIndex, true);
+    const goalY = field.center.y - field.goalWidth / 2;
+    const upperHeight = goalMouth.top - goalY;
+    const lowerStart = goalMouth.bottom;
+    const lowerHeight = goalY + field.goalWidth - goalMouth.bottom;
+    const x = wall.teamIndex === 0 ? 30 - field.goalDepth : field.width - 30;
     ctx.fillStyle = "rgba(255,255,255,0.45)";
-    ctx.fillRect(wallX, box.y, 10, box.height);
+    if (upperHeight > 0) {
+      ctx.fillRect(x, goalY, field.goalDepth, upperHeight);
+    }
+    if (lowerHeight > 0) {
+      ctx.fillRect(x, lowerStart, field.goalDepth, lowerHeight);
+    }
   });
 }
 
@@ -710,12 +723,24 @@ function getGoalBox(teamIndex) {
   };
 }
 
+function getGoalMouth(teamIndex, ignoreWall = false) {
+  const hasWall =
+    !ignoreWall && state.goalWalls.some((wall) => wall.teamIndex === teamIndex);
+  const height = hasWall ? field.goalWidth * physics.goalWallShrink : field.goalWidth;
+  const top = field.center.y - height / 2;
+  return {
+    top,
+    bottom: top + height,
+    height,
+  };
+}
+
 function keepBallInBounds(ballObj) {
   if (state.goalPause) {
     return;
   }
-  const goalTop = field.center.y - field.goalWidth / 2;
-  const goalBottom = field.center.y + field.goalWidth / 2;
+  const leftGoal = getGoalMouth(0);
+  const rightGoal = getGoalMouth(1);
   const wallThickness = 10;
   if (
     ballObj.y - ballObj.radius < 30 ||
@@ -730,7 +755,7 @@ function keepBallInBounds(ballObj) {
   }
 
   if (ballObj.x - ballObj.radius < 30) {
-    if (ballObj.y > goalTop && ballObj.y < goalBottom) {
+    if (ballObj.y > leftGoal.top && ballObj.y < leftGoal.bottom) {
       const hasWall = state.goalWalls.some((wall) => wall.teamIndex === 0);
       if (hasWall && ballObj.x - ballObj.radius < 30 + wallThickness) {
         ballObj.vx = Math.abs(ballObj.vx) * 0.8;
@@ -745,7 +770,7 @@ function keepBallInBounds(ballObj) {
   }
 
   if (ballObj.x + ballObj.radius > field.width - 30) {
-    if (ballObj.y > goalTop && ballObj.y < goalBottom) {
+    if (ballObj.y > rightGoal.top && ballObj.y < rightGoal.bottom) {
       const hasWall = state.goalWalls.some((wall) => wall.teamIndex === 1);
       if (hasWall && ballObj.x + ballObj.radius > field.width - 30 - wallThickness) {
         ballObj.vx = -Math.abs(ballObj.vx) * 0.8;
@@ -831,8 +856,16 @@ function handlePlayerCollisions(entities) {
           const effectiveImpact = Math.max(physics.collisionDamageMin, impactSpeed);
           const aPower = (a.profile?.strength ?? 1) * (a.profile?.speed ?? 1);
           const bPower = (b.profile?.strength ?? 1) * (b.profile?.speed ?? 1);
-          const damageA = effectiveImpact * physics.playerDamageScale * bPower;
-          const damageB = effectiveImpact * physics.playerDamageScale * aPower;
+          const damageA =
+            effectiveImpact *
+            physics.playerDamageScale *
+            bPower *
+            (a.isGoalie ? physics.goalieDamageScale : 1);
+          const damageB =
+            effectiveImpact *
+            physics.playerDamageScale *
+            aPower *
+            (b.isGoalie ? physics.goalieDamageScale : 1);
           a.health = Math.max(0, a.health - damageA);
           b.health = Math.max(0, b.health - damageB);
           if (a.health === 0 && a.koTurns === 0) {
@@ -1046,7 +1079,7 @@ function spawnRandomItem() {
     type,
     x,
     y,
-    turnsLeft: 1,
+    turnsLeft: physics.itemEffectTurns,
   });
 }
 
@@ -1058,12 +1091,15 @@ function applyItemEffect(item) {
       radius: ball.radius,
       vx: ball.vx,
       vy: ball.vy,
-      turnsLeft: 1,
+      turnsLeft: physics.itemEffectTurns,
     });
   } else if (item.type === "wall") {
     const existing = state.goalWalls.some((wall) => wall.teamIndex === state.turn);
     if (!existing) {
-      state.goalWalls.push({ teamIndex: state.turn, turnsLeft: 1 });
+      state.goalWalls.push({
+        teamIndex: state.turn,
+        turnsLeft: physics.itemEffectTurns,
+      });
     }
   } else if (item.type === "paralyze") {
     const targetTeam = state.turn === 0 ? 1 : 0;
@@ -1073,7 +1109,7 @@ function applyItemEffect(item) {
     ].filter((player) => player && player.paralyzedTurns === 0 && player.koTurns === 0);
     if (candidates.length > 0) {
       const target = candidates[Math.floor(Math.random() * candidates.length)];
-      target.paralyzedTurns = 1;
+      target.paralyzedTurns = physics.itemEffectTurns;
       target.vx = 0;
       target.vy = 0;
     }
