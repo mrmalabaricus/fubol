@@ -222,6 +222,7 @@ const physics = {
   minSpeed: 0.12,
   maxPower: 12,
   playerDamageScale: 6,
+  koTurns: 2,
 };
 
 const teams = [
@@ -274,6 +275,7 @@ function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
     isGoalie,
     maxHealth: profile.maxHealth,
     health: profile.maxHealth,
+    koTurns: 0,
   };
 }
 
@@ -317,6 +319,7 @@ function resetPositions(scoringTeam) {
     player.vx = 0;
     player.vy = 0;
     player.health = player.maxHealth;
+    player.koTurns = 0;
   });
   teams[1].players.forEach((player, i) => {
     player.x = formationB[i].x;
@@ -324,6 +327,7 @@ function resetPositions(scoringTeam) {
     player.vx = 0;
     player.vy = 0;
     player.health = player.maxHealth;
+    player.koTurns = 0;
   });
 
   teams[0].goalie.x = formationA.goalie.x;
@@ -331,11 +335,13 @@ function resetPositions(scoringTeam) {
   teams[0].goalie.vx = 0;
   teams[0].goalie.vy = 0;
   teams[0].goalie.health = teams[0].goalie.maxHealth;
+  teams[0].goalie.koTurns = 0;
   teams[1].goalie.x = formationB.goalie.x;
   teams[1].goalie.y = formationB.goalie.y;
   teams[1].goalie.vx = 0;
   teams[1].goalie.vy = 0;
   teams[1].goalie.health = teams[1].goalie.maxHealth;
+  teams[1].goalie.koTurns = 0;
 
   state.selected = null;
   state.dragging = false;
@@ -543,6 +549,10 @@ function applyPhysics() {
   ];
 
   entities.forEach((entity) => {
+    if (entity !== ball && entity.koTurns > 0) {
+      entity.vx = 0;
+      entity.vy = 0;
+    }
     entity.x += entity.vx;
     entity.y += entity.vy;
     entity.vx *= physics.friction;
@@ -706,6 +716,16 @@ function handlePlayerCollisions(entities) {
           const damageB = impactSpeed * physics.playerDamageScale * aPower;
           a.health = Math.max(0, a.health - damageA);
           b.health = Math.max(0, b.health - damageB);
+          if (a.health === 0 && a.koTurns === 0) {
+            a.koTurns = physics.koTurns;
+            a.vx = 0;
+            a.vy = 0;
+          }
+          if (b.health === 0 && b.koTurns === 0) {
+            b.koTurns = physics.koTurns;
+            b.vx = 0;
+            b.vy = 0;
+          }
         }
       }
     }
@@ -736,7 +756,25 @@ function nextTurn() {
   }
   state.turn = state.turn === 0 ? 1 : 0;
   state.selected = null;
+  recoverKnockouts();
   updateStatus();
+}
+
+function recoverKnockouts() {
+  const players = [
+    ...teams[0].players,
+    ...teams[1].players,
+    teams[0].goalie,
+    teams[1].goalie,
+  ];
+  players.forEach((player) => {
+    if (player.koTurns > 0) {
+      player.koTurns -= 1;
+      if (player.koTurns === 0) {
+        player.health = Math.max(player.health, player.maxHealth * 0.5);
+      }
+    }
+  });
 }
 
 function update() {
@@ -767,9 +805,13 @@ function getMousePos(event) {
 }
 
 function selectPlayerAt(pos) {
-  const candidates = [...teams[state.turn].players];
+  const candidates = teams[state.turn].players.filter(
+    (player) => player.koTurns === 0
+  );
   if (canUseGoalie()) {
-    candidates.push(teams[state.turn].goalie);
+    if (teams[state.turn].goalie.koTurns === 0) {
+      candidates.push(teams[state.turn].goalie);
+    }
   }
   const hit = candidates.find(
     (player) => Math.hypot(player.x - pos.x, player.y - pos.y) <= player.radius
