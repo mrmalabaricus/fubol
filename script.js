@@ -226,6 +226,7 @@ const physics = {
   playerDamageScale: 6,
   koTurns: 2,
   playerBounceScale: 0.55,
+  collisionDamageMin: 0.6,
 };
 
 const teams = [
@@ -756,10 +757,11 @@ function handlePlayerCollisions(entities) {
 
         if (a.team !== b.team) {
           const impactSpeed = Math.max(0, -velocityAlongNormal);
+          const effectiveImpact = Math.max(physics.collisionDamageMin, impactSpeed);
           const aPower = (a.profile?.strength ?? 1) * (a.profile?.speed ?? 1);
           const bPower = (b.profile?.strength ?? 1) * (b.profile?.speed ?? 1);
-          const damageA = impactSpeed * physics.playerDamageScale * bPower;
-          const damageB = impactSpeed * physics.playerDamageScale * aPower;
+          const damageA = effectiveImpact * physics.playerDamageScale * bPower;
+          const damageB = effectiveImpact * physics.playerDamageScale * aPower;
           a.health = Math.max(0, a.health - damageA);
           b.health = Math.max(0, b.health - damageB);
           if (a.health === 0 && a.koTurns === 0) {
