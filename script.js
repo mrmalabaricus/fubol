@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const statusEl = document.getElementById("status");
 const winEl = document.getElementById("win");
+const startScreen = document.getElementById("startScreen");
 
 const field = {
   width: canvas.width,
@@ -213,6 +214,7 @@ const state = {
   scores: [0, 0],
   winner: null,
   turnInProgress: false,
+  started: false,
 };
 
 const physics = {
@@ -736,6 +738,11 @@ function nextTurn() {
 }
 
 function update() {
+  if (!state.started) {
+    draw();
+    requestAnimationFrame(update);
+    return;
+  }
   if (!state.winner) {
     applyPhysics();
   }
@@ -831,3 +838,12 @@ updateStatus();
 update();
 
 console.info("Assets placeholder:", assets);
+
+function startGame() {
+  if (state.started) return;
+  state.started = true;
+  startScreen.classList.add("hidden");
+}
+
+startScreen.addEventListener("pointerdown", startGame);
+window.addEventListener("keydown", startGame);
