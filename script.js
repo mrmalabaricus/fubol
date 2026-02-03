@@ -698,13 +698,15 @@ function handlePlayerCollisions(entities) {
         b.vx -= impulseX / b.radius;
         b.vy -= impulseY / b.radius;
 
-        const impactSpeed = Math.max(0, -velocityAlongNormal);
-        const damageA =
-          impactSpeed * physics.playerDamageScale * (b.profile?.strength ?? 1);
-        const damageB =
-          impactSpeed * physics.playerDamageScale * (a.profile?.strength ?? 1);
-        a.health = Math.max(0, a.health - damageA);
-        b.health = Math.max(0, b.health - damageB);
+        if (a.team !== b.team) {
+          const impactSpeed = Math.max(0, -velocityAlongNormal);
+          const aPower = (a.profile?.strength ?? 1) * (a.profile?.speed ?? 1);
+          const bPower = (b.profile?.strength ?? 1) * (b.profile?.speed ?? 1);
+          const damageA = impactSpeed * physics.playerDamageScale * bPower;
+          const damageB = impactSpeed * physics.playerDamageScale * aPower;
+          a.health = Math.max(0, a.health - damageA);
+          b.health = Math.max(0, b.health - damageB);
+        }
       }
     }
   }
