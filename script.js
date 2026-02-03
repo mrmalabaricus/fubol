@@ -7,9 +7,9 @@ const winEl = document.getElementById("win");
 const field = {
   width: canvas.width,
   height: canvas.height,
-  goalWidth: 220,
+  goalWidth: 240,
   goalDepth: 28,
-  boxDepth: 130,
+  boxDepth: 150,
   center: { x: canvas.width / 2, y: canvas.height / 2 },
 };
 
@@ -403,15 +403,11 @@ function drawField() {
 }
 
 function drawGoalBox(teamIndex) {
-  const goalY = field.center.y - field.goalWidth / 2;
-  const boxX =
-    teamIndex === 0
-      ? 30
-      : field.width - 30 - field.boxDepth;
+  const goalBox = getGoalBox(teamIndex);
   ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-  ctx.fillRect(boxX, goalY, field.boxDepth, field.goalWidth);
+  ctx.fillRect(goalBox.x, goalBox.y, goalBox.width, goalBox.height);
   ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-  ctx.strokeRect(boxX, goalY, field.boxDepth, field.goalWidth);
+  ctx.strokeRect(goalBox.x, goalBox.y, goalBox.width, goalBox.height);
 }
 
 function drawGoal(teamIndex) {
@@ -513,16 +509,20 @@ function clamp(value, min, max) {
 }
 
 function updateGoalie(goalie) {
-  const areaTop = field.center.y - field.goalWidth / 2 + 12;
-  const areaBottom = field.center.y + field.goalWidth / 2 - 12;
+  const areaTop = field.center.y - field.goalWidth / 2 + 16;
+  const areaBottom = field.center.y + field.goalWidth / 2 - 16;
   const targetY = clamp(ball.y, areaTop, areaBottom);
   goalie.y += (targetY - goalie.y) * 0.05;
 
-  const minX = goalie.team === 0 ? 40 : field.width - 80;
-  const maxX = goalie.team === 0 ? 90 : field.width - 40;
+  const goalieBox = getGoalBox(goalie.team);
+  const minX = goalieBox.x + goalie.radius;
+  const maxX = goalieBox.x + goalieBox.width - goalie.radius;
+  const minY = goalieBox.y + goalie.radius;
+  const maxY = goalieBox.y + goalieBox.height - goalie.radius;
   goalie.x = clamp(goalie.x, minX, maxX);
-  goalie.vx *= 0.6;
-  goalie.vy *= 0.6;
+  goalie.y = clamp(goalie.y, minY, maxY);
+  goalie.vx = 0;
+  goalie.vy = 0;
 }
 
 function applyPhysics() {
@@ -546,21 +546,37 @@ function applyPhysics() {
     if (entity !== ball) {
       const padding = 30;
       const rebound = 0.6;
-      if (entity.x - entity.radius < padding) {
-        entity.x = padding + entity.radius;
-        entity.vx = Math.abs(entity.vx) * rebound;
-      }
-      if (entity.x + entity.radius > field.width - padding) {
-        entity.x = field.width - padding - entity.radius;
-        entity.vx = -Math.abs(entity.vx) * rebound;
-      }
-      if (entity.y - entity.radius < padding) {
-        entity.y = padding + entity.radius;
-        entity.vy = Math.abs(entity.vy) * rebound;
-      }
-      if (entity.y + entity.radius > field.height - padding) {
-        entity.y = field.height - padding - entity.radius;
-        entity.vy = -Math.abs(entity.vy) * rebound;
+      if (entity.isGoalie) {
+        const goalieBox = getGoalBox(entity.team);
+        entity.x = clamp(
+          entity.x,
+          goalieBox.x + entity.radius,
+          goalieBox.x + goalieBox.width - entity.radius
+        );
+        entity.y = clamp(
+          entity.y,
+          goalieBox.y + entity.radius,
+          goalieBox.y + goalieBox.height - entity.radius
+        );
+        entity.vx = 0;
+        entity.vy = 0;
+      } else {
+        if (entity.x - entity.radius < padding) {
+          entity.x = padding + entity.radius;
+          entity.vx = Math.abs(entity.vx) * rebound;
+        }
+        if (entity.x + entity.radius > field.width - padding) {
+          entity.x = field.width - padding - entity.radius;
+          entity.vx = -Math.abs(entity.vx) * rebound;
+        }
+        if (entity.y - entity.radius < padding) {
+          entity.y = padding + entity.radius;
+          entity.vy = Math.abs(entity.vy) * rebound;
+        }
+        if (entity.y + entity.radius > field.height - padding) {
+          entity.y = field.height - padding - entity.radius;
+          entity.vy = -Math.abs(entity.vy) * rebound;
+        }
       }
     }
   });
@@ -572,20 +588,8 @@ function applyPhysics() {
 }
 
 function keepPlayersOutOfGoalBoxes() {
-  const goalTop = field.center.y - field.goalWidth / 2;
-  const goalBottom = field.center.y + field.goalWidth / 2;
-  const leftBox = {
-    x: 30,
-    y: goalTop,
-    width: field.boxDepth,
-    height: field.goalWidth,
-  };
-  const rightBox = {
-    x: field.width - 30 - field.boxDepth,
-    y: goalTop,
-    width: field.boxDepth,
-    height: field.goalWidth,
-  };
+  const leftBox = getGoalBox(0);
+  const rightBox = getGoalBox(1);
 
   const resolveBoxOverlap = (player, box, allowInside) => {
     const closestX = clamp(player.x, box.x, box.x + box.width);
@@ -621,27 +625,16 @@ function keepPlayersOutOfGoalBoxes() {
     }
 
     const rebound = 0.25;
-    const useRebound = !player.isGoalie;
     if (allowInside) {
       player.x -= nx * overlap;
       player.y -= ny * overlap;
-      if (useRebound) {
-        player.vx = -nx * Math.abs(player.vx) * rebound;
-        player.vy = -ny * Math.abs(player.vy) * rebound;
-      } else {
-        player.vx = 0;
-        player.vy = 0;
-      }
+      player.vx = 0;
+      player.vy = 0;
     } else {
       player.x += nx * overlap;
       player.y += ny * overlap;
-      if (useRebound) {
-        player.vx = nx * Math.abs(player.vx) * rebound;
-        player.vy = ny * Math.abs(player.vy) * rebound;
-      } else {
-        player.vx = 0;
-        player.vy = 0;
-      }
+      player.vx = nx * Math.abs(player.vx) * rebound;
+      player.vy = ny * Math.abs(player.vy) * rebound;
     }
   };
 
@@ -653,12 +646,16 @@ function keepPlayersOutOfGoalBoxes() {
     resolveBoxOverlap(player, leftBox, false);
     resolveBoxOverlap(player, rightBox, false);
   });
-  if (teams[0].goalie) {
-    resolveBoxOverlap(teams[0].goalie, leftBox, true);
-  }
-  if (teams[1].goalie) {
-    resolveBoxOverlap(teams[1].goalie, rightBox, true);
-  }
+}
+
+function getGoalBox(teamIndex) {
+  const goalY = field.center.y - field.goalWidth / 2;
+  return {
+    x: teamIndex === 0 ? 30 : field.width - 30 - field.boxDepth,
+    y: goalY,
+    width: field.boxDepth,
+    height: field.goalWidth,
+  };
 }
 
 function keepBallInBounds() {
