@@ -513,14 +513,16 @@ function clamp(value, min, max) {
 }
 
 function updateGoalie(goalie) {
-  const areaTop = field.center.y - field.goalWidth / 2 + 10;
-  const areaBottom = field.center.y + field.goalWidth / 2 - 10;
+  const areaTop = field.center.y - field.goalWidth / 2 + 12;
+  const areaBottom = field.center.y + field.goalWidth / 2 - 12;
   const targetY = clamp(ball.y, areaTop, areaBottom);
   goalie.y += (targetY - goalie.y) * 0.05;
 
   const minX = goalie.team === 0 ? 40 : field.width - 80;
   const maxX = goalie.team === 0 ? 90 : field.width - 40;
   goalie.x = clamp(goalie.x, minX, maxX);
+  goalie.vx *= 0.6;
+  goalie.vy *= 0.6;
 }
 
 function applyPhysics() {
@@ -626,6 +628,9 @@ function keepPlayersOutOfGoalBoxes() {
       if (useRebound) {
         player.vx = -nx * Math.abs(player.vx) * rebound;
         player.vy = -ny * Math.abs(player.vy) * rebound;
+      } else {
+        player.vx = 0;
+        player.vy = 0;
       }
     } else {
       player.x += nx * overlap;
@@ -633,6 +638,9 @@ function keepPlayersOutOfGoalBoxes() {
       if (useRebound) {
         player.vx = nx * Math.abs(player.vx) * rebound;
         player.vy = ny * Math.abs(player.vy) * rebound;
+      } else {
+        player.vx = 0;
+        player.vy = 0;
       }
     }
   };
