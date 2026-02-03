@@ -26,6 +26,46 @@ const assets = {
   powerBar: "assets/power_bar.png",
 };
 
+const itemAssets = {
+  double: "assets/item_double.png",
+  wall: "assets/item_wall.png",
+  paralyze: "assets/item_paralyze.png",
+  extraBall: "assets/extra_ball.png",
+  goalWall: "assets/goal_wall.png",
+  paralyzeRay: "assets/paralyze_ray.png",
+};
+
+const imageCache = new Map();
+
+function getImage(src) {
+  if (imageCache.has(src)) {
+    return imageCache.get(src);
+  }
+  const img = new Image();
+  const record = { img, loaded: false, failed: false };
+  img.onload = () => {
+    record.loaded = true;
+  };
+  img.onerror = () => {
+    record.failed = true;
+  };
+  img.src = src;
+  imageCache.set(src, record);
+  return record;
+}
+
+function drawImageOrPlaceholder(src, x, y, width, height, color) {
+  const record = getImage(src);
+  if (record.loaded) {
+    ctx.drawImage(record.img, x, y, width, height);
+  } else {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.strokeRect(x, y, width, height);
+  }
+}
+
 const goalkeeperProfiles = {
   golero1: { name: "Golero 1", strength: 1.05, speed: 0.7, maxHealth: 140 },
   golero2: { name: "Golero 2", strength: 1.2, speed: 0.6, maxHealth: 150 },
@@ -459,16 +499,19 @@ function drawGoal(teamIndex) {
 }
 
 function drawPlayer(player) {
-  ctx.beginPath();
-  ctx.fillStyle = player.isGoalie
-    ? "#ffd66b"
-    : teams[player.team].color;
-  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-  ctx.fill();
-
+  const size = player.radius * 2.2;
+  const color = player.isGoalie ? "#ffd66b" : teams[player.team].color;
+  drawImageOrPlaceholder(
+    player.image,
+    player.x - size / 2,
+    player.y - size / 2,
+    size,
+    size,
+    color
+  );
   ctx.lineWidth = 2;
   ctx.strokeStyle = player === state.selected ? "#ffffff" : "rgba(0,0,0,0.2)";
-  ctx.stroke();
+  ctx.strokeRect(player.x - size / 2, player.y - size / 2, size, size);
 
   drawHealthBar(player);
   if (player.koTurns > 0) {
@@ -531,52 +574,66 @@ function drawStar(cx, cy, outerRadius, points) {
 }
 
 function drawParalyzeRay(player) {
-  const rayWidth = 18;
-  const rayHeight = 36;
+  const rayWidth = 24;
+  const rayHeight = 48;
   const x = player.x - rayWidth / 2;
   const y = player.y - player.radius - rayHeight - 8;
-  ctx.save();
-  ctx.fillStyle = "rgba(255, 255, 200, 0.9)";
-  ctx.fillRect(x, y, rayWidth, rayHeight);
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.strokeRect(x, y, rayWidth, rayHeight);
-  ctx.restore();
+  drawImageOrPlaceholder(
+    itemAssets.paralyzeRay,
+    x,
+    y,
+    rayWidth,
+    rayHeight,
+    "rgba(255, 255, 200, 0.9)"
+  );
 }
 
 function drawBall() {
-  ctx.beginPath();
-  ctx.fillStyle = "#f7f7f7";
-  ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.2)";
-  ctx.stroke();
+  const size = ball.radius * 2;
+  drawImageOrPlaceholder(
+    assets.ball,
+    ball.x - size / 2,
+    ball.y - size / 2,
+    size,
+    size,
+    "#f7f7f7"
+  );
 }
 
 function drawExtraBalls() {
   state.extraBalls.forEach((extra) => {
-    ctx.beginPath();
-    ctx.fillStyle = "#ffffff";
-    ctx.arc(extra.x, extra.y, extra.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.2)";
-    ctx.stroke();
+    const size = extra.radius * 2;
+    drawImageOrPlaceholder(
+      itemAssets.extraBall,
+      extra.x - size / 2,
+      extra.y - size / 2,
+      size,
+      size,
+      "#ffffff"
+    );
   });
 }
 
 function drawItems() {
   state.items.forEach((item) => {
-    ctx.beginPath();
+    let color = "#ffd66b";
+    let src = itemAssets.paralyze;
     if (item.type === "double") {
-      ctx.fillStyle = "#57ff99";
+      color = "#57ff99";
+      src = itemAssets.double;
     } else if (item.type === "wall") {
-      ctx.fillStyle = "#4aa3ff";
-    } else {
-      ctx.fillStyle = "#ffd66b";
+      color = "#4aa3ff";
+      src = itemAssets.wall;
     }
-    ctx.arc(item.x, item.y, physics.itemRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.stroke();
+    const size = physics.itemRadius * 2;
+    drawImageOrPlaceholder(
+      src,
+      item.x - size / 2,
+      item.y - size / 2,
+      size,
+      size,
+      color
+    );
   });
 }
 
