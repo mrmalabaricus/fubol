@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tejo Fútbol Slider</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game">
+      <header class="hud">
+        <div class="scoreboard">
+          <span class="team team-a">Equipo Azul</span>
+          <span id="score">0 - 0</span>
+          <span class="team team-b">Equipo Rojo</span>
+        </div>
+        <div class="status" id="status">Turno: Equipo Azul</div>
+        <div class="win" id="win"></div>
+      </header>
+
+      <section class="playfield">
+        <canvas id="field" width="960" height="540" aria-label="Cancha de fútbol"></canvas>
+        <aside class="panel">
+          <h2>Assets placeholder</h2>
+          <ul>
+            <li><strong>field_bg.png</strong> — 960x540, 1 frame. Uso: fondo de cancha.</li>
+            <li><strong>player_blue_sprite.png</strong> — 64x64, 6 frames. Uso: 4 jugadores azules.</li>
+            <li><strong>player_red_sprite.png</strong> — 64x64, 6 frames. Uso: 4 jugadores rojos.</li>
+            <li><strong>goalkeeper_blue.png</strong> — 72x72, 4 frames. Uso: arquero azul en área.</li>
+            <li><strong>goalkeeper_red.png</strong> — 72x72, 4 frames. Uso: arquero rojo en área.</li>
+            <li><strong>ball.png</strong> — 32x32, 1 frame. Uso: pelota.</li>
+            <li><strong>aim_line.png</strong> — 16x16, 1 frame (tile). Uso: línea punteada de dirección.</li>
+            <li><strong>power_bar.png</strong> — 200x24, 5 frames. Uso: barra de fuerza.</li>
+          </ul>
+          <h2>Controles</h2>
+          <p>
+            Seleccioná un jugador de tu equipo, arrastrá para apuntar y soltá para lanzar. El arquero
+            no puede salir del área.
+          </p>
+        </aside>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
