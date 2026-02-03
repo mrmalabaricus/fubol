@@ -217,6 +217,9 @@ const state = {
   started: false,
   confetti: [],
   goalPause: false,
+  items: [],
+  extraBalls: [],
+  goalWalls: [],
 };
 
 const physics = {
@@ -227,6 +230,9 @@ const physics = {
   koTurns: 2,
   playerBounceScale: 0.55,
   collisionDamageMin: 0.6,
+  itemRadius: 12,
+  itemSpawnChance: 0.35,
+  itemBounce: 0.4,
 };
 
 const teams = [
@@ -280,6 +286,7 @@ function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
     maxHealth: profile.maxHealth,
     health: profile.maxHealth,
     koTurns: 0,
+    paralyzedTurns: 0,
   };
 }
 
@@ -324,6 +331,7 @@ function resetPositions(scoringTeam) {
     player.vy = 0;
     player.health = player.maxHealth;
     player.koTurns = 0;
+    player.paralyzedTurns = 0;
   });
   teams[1].players.forEach((player, i) => {
     player.x = formationB[i].x;
@@ -332,6 +340,7 @@ function resetPositions(scoringTeam) {
     player.vy = 0;
     player.health = player.maxHealth;
     player.koTurns = 0;
+    player.paralyzedTurns = 0;
   });
 
   teams[0].goalie.x = formationA.goalie.x;
@@ -340,12 +349,18 @@ function resetPositions(scoringTeam) {
   teams[0].goalie.vy = 0;
   teams[0].goalie.health = teams[0].goalie.maxHealth;
   teams[0].goalie.koTurns = 0;
+  teams[0].goalie.paralyzedTurns = 0;
   teams[1].goalie.x = formationB.goalie.x;
   teams[1].goalie.y = formationB.goalie.y;
   teams[1].goalie.vx = 0;
   teams[1].goalie.vy = 0;
   teams[1].goalie.health = teams[1].goalie.maxHealth;
   teams[1].goalie.koTurns = 0;
+  teams[1].goalie.paralyzedTurns = 0;
+
+  state.items = [];
+  state.extraBalls = [];
+  state.goalWalls = [];
 
   state.selected = null;
   state.dragging = false;
@@ -509,6 +524,43 @@ function drawBall() {
   ctx.stroke();
 }
 
+function drawExtraBalls() {
+  state.extraBalls.forEach((extra) => {
+    ctx.beginPath();
+    ctx.fillStyle = "#ffffff";
+    ctx.arc(extra.x, extra.y, extra.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.stroke();
+  });
+}
+
+function drawItems() {
+  state.items.forEach((item) => {
+    ctx.beginPath();
+    if (item.type === "double") {
+      ctx.fillStyle = "#57ff99";
+    } else if (item.type === "wall") {
+      ctx.fillStyle = "#4aa3ff";
+    } else {
+      ctx.fillStyle = "#ffd66b";
+    }
+    ctx.arc(item.x, item.y, physics.itemRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.stroke();
+  });
+}
+
+function drawGoalWalls() {
+  state.goalWalls.forEach((wall) => {
+    const box = getGoalBox(wall.teamIndex);
+    const wallX = wall.teamIndex === 0 ? box.x : box.x + box.width - 10;
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.fillRect(wallX, box.y, 10, box.height);
+  });
+}
+
 function drawAimGuide() {
   if (!state.dragging || !state.selected || !state.dragStart || !state.dragCurrent) {
     return;
@@ -547,9 +599,12 @@ function drawAimGuide() {
 
 function draw() {
   drawField();
+  drawItems();
+  drawGoalWalls();
   teams.forEach((team) => team.players.forEach(drawPlayer));
   teams.forEach((team) => drawPlayer(team.goalie));
   drawBall();
+  drawExtraBalls();
   drawAimGuide();
   drawConfetti();
 }
@@ -582,65 +637,66 @@ function updateGoalie(goalie) {
 }
 
 function applyPhysics() {
-  const entities = [
-    ball,
+  const players = [
     ...teams[0].players,
     ...teams[1].players,
     teams[0].goalie,
     teams[1].goalie,
   ];
+  const balls = getAllBalls();
 
-  entities.forEach((entity) => {
-    if (entity !== ball && entity.koTurns > 0) {
-      entity.vx = 0;
-      entity.vy = 0;
+  players.forEach((player) => {
+    if (player.koTurns > 0 || player.paralyzedTurns > 0) {
+      player.vx = 0;
+      player.vy = 0;
     }
-    entity.x += entity.vx;
-    entity.y += entity.vy;
-    entity.vx *= physics.friction;
-    entity.vy *= physics.friction;
+    player.x += player.vx;
+    player.y += player.vy;
+    player.vx *= physics.friction;
+    player.vy *= physics.friction;
 
-    if (Math.abs(entity.vx) < physics.minSpeed) entity.vx = 0;
-    if (Math.abs(entity.vy) < physics.minSpeed) entity.vy = 0;
+    if (Math.abs(player.vx) < physics.minSpeed) player.vx = 0;
+    if (Math.abs(player.vy) < physics.minSpeed) player.vy = 0;
 
-    if (entity !== ball) {
-      const padding = 30;
-      const rebound = 0.6;
-      if (entity.isGoalie) {
-        const goalieBox = getGoalBox(entity.team);
-        entity.x = clamp(
-          entity.x,
-          goalieBox.x + entity.radius,
-          goalieBox.x + goalieBox.width - entity.radius
-        );
-        entity.y = clamp(
-          entity.y,
-          goalieBox.y + entity.radius,
-          goalieBox.y + goalieBox.height - entity.radius
-        );
-      } else {
-        if (entity.x - entity.radius < padding) {
-          entity.x = padding + entity.radius;
-          entity.vx = Math.abs(entity.vx) * rebound;
-        }
-        if (entity.x + entity.radius > field.width - padding) {
-          entity.x = field.width - padding - entity.radius;
-          entity.vx = -Math.abs(entity.vx) * rebound;
-        }
-        if (entity.y - entity.radius < padding) {
-          entity.y = padding + entity.radius;
-          entity.vy = Math.abs(entity.vy) * rebound;
-        }
-        if (entity.y + entity.radius > field.height - padding) {
-          entity.y = field.height - padding - entity.radius;
-          entity.vy = -Math.abs(entity.vy) * rebound;
-        }
+    const padding = 30;
+    const rebound = 0.6;
+    if (player.isGoalie) {
+      const goalieBox = getGoalBox(player.team);
+      player.x = clamp(
+        player.x,
+        goalieBox.x + player.radius,
+        goalieBox.x + goalieBox.width - player.radius
+      );
+      player.y = clamp(
+        player.y,
+        goalieBox.y + player.radius,
+        goalieBox.y + goalieBox.height - player.radius
+      );
+    } else {
+      if (player.x - player.radius < padding) {
+        player.x = padding + player.radius;
+        player.vx = Math.abs(player.vx) * rebound;
+      }
+      if (player.x + player.radius > field.width - padding) {
+        player.x = field.width - padding - player.radius;
+        player.vx = -Math.abs(player.vx) * rebound;
+      }
+      if (player.y - player.radius < padding) {
+        player.y = padding + player.radius;
+        player.vy = Math.abs(player.vy) * rebound;
+      }
+      if (player.y + player.radius > field.height - padding) {
+        player.y = field.height - padding - player.radius;
+        player.vy = -Math.abs(player.vy) * rebound;
       }
     }
+    resolvePlayerItemCollisions(player);
   });
 
-  keepBallInBounds();
-  handleCollisions();
+  balls.forEach((ballObj) => applyBallPhysics(ballObj));
+  balls.forEach((ballObj) => keepBallInBounds(ballObj));
+  handleCollisions(balls, players);
+  handleBallItemCollisions(balls);
   teams.forEach((team) => updateGoalie(team.goalie));
 }
 
@@ -654,64 +710,79 @@ function getGoalBox(teamIndex) {
   };
 }
 
-function keepBallInBounds() {
+function keepBallInBounds(ballObj) {
   if (state.goalPause) {
     return;
   }
   const goalTop = field.center.y - field.goalWidth / 2;
   const goalBottom = field.center.y + field.goalWidth / 2;
-  if (ball.y - ball.radius < 30 || ball.y + ball.radius > field.height - 30) {
-    ball.vy *= -0.8;
-    ball.y = clamp(ball.y, 30 + ball.radius, field.height - 30 - ball.radius);
+  const wallThickness = 10;
+  if (
+    ballObj.y - ballObj.radius < 30 ||
+    ballObj.y + ballObj.radius > field.height - 30
+  ) {
+    ballObj.vy *= -0.8;
+    ballObj.y = clamp(
+      ballObj.y,
+      30 + ballObj.radius,
+      field.height - 30 - ballObj.radius
+    );
   }
 
-  if (ball.x - ball.radius < 30) {
-    if (ball.y > goalTop && ball.y < goalBottom) {
-      score(1);
+  if (ballObj.x - ballObj.radius < 30) {
+    if (ballObj.y > goalTop && ballObj.y < goalBottom) {
+      const hasWall = state.goalWalls.some((wall) => wall.teamIndex === 0);
+      if (hasWall && ballObj.x - ballObj.radius < 30 + wallThickness) {
+        ballObj.vx = Math.abs(ballObj.vx) * 0.8;
+        ballObj.x = 30 + wallThickness + ballObj.radius;
+      } else {
+        score(1);
+      }
     } else {
-      ball.vx *= -0.8;
-      ball.x = 30 + ball.radius;
+      ballObj.vx *= -0.8;
+      ballObj.x = 30 + ballObj.radius;
     }
   }
 
-  if (ball.x + ball.radius > field.width - 30) {
-    if (ball.y > goalTop && ball.y < goalBottom) {
-      score(0);
+  if (ballObj.x + ballObj.radius > field.width - 30) {
+    if (ballObj.y > goalTop && ballObj.y < goalBottom) {
+      const hasWall = state.goalWalls.some((wall) => wall.teamIndex === 1);
+      if (hasWall && ballObj.x + ballObj.radius > field.width - 30 - wallThickness) {
+        ballObj.vx = -Math.abs(ballObj.vx) * 0.8;
+        ballObj.x = field.width - 30 - wallThickness - ballObj.radius;
+      } else {
+        score(0);
+      }
     } else {
-      ball.vx *= -0.8;
-      ball.x = field.width - 30 - ball.radius;
+      ballObj.vx *= -0.8;
+      ballObj.x = field.width - 30 - ballObj.radius;
     }
   }
 }
 
-function handleCollisions() {
-  const entities = [
-    ...teams[0].players,
-    ...teams[1].players,
-    teams[0].goalie,
-    teams[1].goalie,
-  ];
+function handleCollisions(balls, players) {
+  handlePlayerCollisions(players);
 
-  handlePlayerCollisions(entities);
-
-  entities.forEach((player) => {
-    const dx = ball.x - player.x;
-    const dy = ball.y - player.y;
-    const distance = Math.hypot(dx, dy);
-    const minDistance = ball.radius + player.radius;
-    if (distance > 0 && distance < minDistance) {
-      const nx = dx / distance;
-      const ny = dy / distance;
-      const overlap = minDistance - distance;
-      ball.x += nx * overlap;
-      ball.y += ny * overlap;
-      const kickPower = 0.6 + (player.isGoalie ? 0.4 : 0.2);
-      const strengthBoost = player.profile?.strength ?? 1;
-      const movementBoost = Math.min(1, Math.hypot(player.vx, player.vy) / 6);
-      const bounceScale = 0.35 + physics.playerBounceScale * movementBoost;
-      ball.vx += nx * kickPower * 10 * strengthBoost * bounceScale;
-      ball.vy += ny * kickPower * 10 * strengthBoost * bounceScale;
-    }
+  players.forEach((player) => {
+    balls.forEach((ballObj) => {
+      const dx = ballObj.x - player.x;
+      const dy = ballObj.y - player.y;
+      const distance = Math.hypot(dx, dy);
+      const minDistance = ballObj.radius + player.radius;
+      if (distance > 0 && distance < minDistance) {
+        const nx = dx / distance;
+        const ny = dy / distance;
+        const overlap = minDistance - distance;
+        ballObj.x += nx * overlap;
+        ballObj.y += ny * overlap;
+        const kickPower = 0.6 + (player.isGoalie ? 0.4 : 0.2);
+        const strengthBoost = player.profile?.strength ?? 1;
+        const movementBoost = Math.min(1, Math.hypot(player.vx, player.vy) / 6);
+        const bounceScale = 0.35 + physics.playerBounceScale * movementBoost;
+        ballObj.vx += nx * kickPower * 10 * strengthBoost * bounceScale;
+        ballObj.vy += ny * kickPower * 10 * strengthBoost * bounceScale;
+      }
+    });
   });
 }
 
@@ -811,6 +882,7 @@ function nextTurn() {
   state.turn = state.turn === 0 ? 1 : 0;
   state.selected = null;
   recoverKnockouts();
+  updateItemsForNewTurn();
   updateStatus();
 }
 
@@ -828,7 +900,26 @@ function recoverKnockouts() {
         player.health = Math.max(player.health, player.maxHealth * 0.5);
       }
     }
+    if (player.paralyzedTurns > 0) {
+      player.paralyzedTurns -= 1;
+    }
   });
+}
+
+function updateItemsForNewTurn() {
+  state.items = state.items
+    .map((item) => ({ ...item, turnsLeft: item.turnsLeft - 1 }))
+    .filter((item) => item.turnsLeft > 0);
+  state.extraBalls = state.extraBalls
+    .map((ballObj) => ({ ...ballObj, turnsLeft: ballObj.turnsLeft - 1 }))
+    .filter((ballObj) => ballObj.turnsLeft > 0);
+  state.goalWalls = state.goalWalls
+    .map((wall) => ({ ...wall, turnsLeft: wall.turnsLeft - 1 }))
+    .filter((wall) => wall.turnsLeft > 0);
+
+  if (Math.random() < physics.itemSpawnChance) {
+    spawnRandomItem();
+  }
 }
 
 function update() {
@@ -896,6 +987,99 @@ function drawConfetti() {
   });
 }
 
+function getAllBalls() {
+  return [ball, ...state.extraBalls];
+}
+
+function applyBallPhysics(ballObj) {
+  ballObj.x += ballObj.vx;
+  ballObj.y += ballObj.vy;
+  ballObj.vx *= physics.friction;
+  ballObj.vy *= physics.friction;
+
+  if (Math.abs(ballObj.vx) < physics.minSpeed) ballObj.vx = 0;
+  if (Math.abs(ballObj.vy) < physics.minSpeed) ballObj.vy = 0;
+}
+
+function resolvePlayerItemCollisions(player) {
+  state.items.forEach((item) => {
+    const dx = player.x - item.x;
+    const dy = player.y - item.y;
+    const distance = Math.hypot(dx, dy);
+    const minDistance = player.radius + physics.itemRadius;
+    if (distance > 0 && distance < minDistance) {
+      const nx = dx / distance;
+      const ny = dy / distance;
+      const overlap = minDistance - distance;
+      player.x += nx * overlap;
+      player.y += ny * overlap;
+      player.vx *= physics.itemBounce;
+      player.vy *= physics.itemBounce;
+    }
+  });
+}
+
+function handleBallItemCollisions(balls) {
+  balls.forEach((ballObj) => {
+    state.items = state.items.filter((item) => {
+      const dx = ballObj.x - item.x;
+      const dy = ballObj.y - item.y;
+      const distance = Math.hypot(dx, dy);
+      const minDistance = ballObj.radius + physics.itemRadius;
+      if (distance <= minDistance) {
+        applyItemEffect(item);
+        return false;
+      }
+      return true;
+    });
+  });
+}
+
+function spawnRandomItem() {
+  const types = ["double", "wall", "paralyze"];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const padding = 80;
+  const x = padding + Math.random() * (field.width - padding * 2);
+  const y = padding + Math.random() * (field.height - padding * 2);
+  state.items.push({
+    id: crypto.randomUUID(),
+    type,
+    x,
+    y,
+    turnsLeft: 1,
+  });
+}
+
+function applyItemEffect(item) {
+  if (item.type === "double") {
+    state.extraBalls.push({
+      x: ball.x + 12,
+      y: ball.y + 12,
+      radius: ball.radius,
+      vx: ball.vx,
+      vy: ball.vy,
+      turnsLeft: 1,
+    });
+  } else if (item.type === "wall") {
+    const existing = state.goalWalls.some((wall) => wall.teamIndex === state.turn);
+    if (!existing) {
+      state.goalWalls.push({ teamIndex: state.turn, turnsLeft: 1 });
+    }
+  } else if (item.type === "paralyze") {
+    const targetTeam = state.turn === 0 ? 1 : 0;
+    const candidates = [
+      ...teams[targetTeam].players,
+      teams[targetTeam].goalie,
+    ].filter((player) => player && player.paralyzedTurns === 0 && player.koTurns === 0);
+    if (candidates.length > 0) {
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      target.paralyzedTurns = 1;
+      target.vx = 0;
+      target.vy = 0;
+    }
+  }
+}
+
 function getMousePos(event) {
   const rect = canvas.getBoundingClientRect();
   return {
@@ -906,10 +1090,13 @@ function getMousePos(event) {
 
 function selectPlayerAt(pos) {
   const candidates = teams[state.turn].players.filter(
-    (player) => player.koTurns === 0
+    (player) => player.koTurns === 0 && player.paralyzedTurns === 0
   );
   if (canUseGoalie()) {
-    if (teams[state.turn].goalie.koTurns === 0) {
+    if (
+      teams[state.turn].goalie.koTurns === 0 &&
+      teams[state.turn].goalie.paralyzedTurns === 0
+    ) {
       candidates.push(teams[state.turn].goalie);
     }
   }
