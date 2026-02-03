@@ -9,6 +9,7 @@ const field = {
   height: canvas.height,
   goalWidth: 180,
   goalDepth: 28,
+  boxDepth: 80,
   center: { x: canvas.width / 2, y: canvas.height / 2 },
 };
 
@@ -385,6 +386,9 @@ function drawField() {
   ctx.setLineDash([]);
   ctx.strokeRect(30, 30, field.width - 60, field.height - 60);
 
+  drawGoalBox(0);
+  drawGoalBox(1);
+
   ctx.beginPath();
   ctx.arc(field.center.x, field.center.y, 70, 0, Math.PI * 2);
   ctx.stroke();
@@ -396,6 +400,18 @@ function drawField() {
 
   drawGoal(0);
   drawGoal(1);
+}
+
+function drawGoalBox(teamIndex) {
+  const goalY = field.center.y - field.goalWidth / 2;
+  const boxX =
+    teamIndex === 0
+      ? 30
+      : field.width - 30 - field.boxDepth;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+  ctx.fillRect(boxX, goalY, field.boxDepth, field.goalWidth);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+  ctx.strokeRect(boxX, goalY, field.boxDepth, field.goalWidth);
 }
 
 function drawGoal(teamIndex) {
@@ -548,8 +564,79 @@ function applyPhysics() {
   });
 
   keepBallInBounds();
+  keepPlayersOutOfGoalBoxes();
   handleCollisions();
   teams.forEach((team) => updateGoalie(team.goalie));
+}
+
+function keepPlayersOutOfGoalBoxes() {
+  const goalTop = field.center.y - field.goalWidth / 2;
+  const goalBottom = field.center.y + field.goalWidth / 2;
+  const leftBox = {
+    x: 30,
+    y: goalTop,
+    width: field.boxDepth,
+    height: field.goalWidth,
+  };
+  const rightBox = {
+    x: field.width - 30 - field.boxDepth,
+    y: goalTop,
+    width: field.boxDepth,
+    height: field.goalWidth,
+  };
+
+  const resolveBoxOverlap = (player, box, allowInside) => {
+    const closestX = clamp(player.x, box.x, box.x + box.width);
+    const closestY = clamp(player.y, box.y, box.y + box.height);
+    const dx = player.x - closestX;
+    const dy = player.y - closestY;
+    const distance = Math.hypot(dx, dy);
+    if (distance >= player.radius) return;
+
+    const overlap = player.radius - (distance || 0.0001);
+    let nx = dx / (distance || 0.0001);
+    let ny = dy / (distance || 0.0001);
+
+    if (distance === 0) {
+      const toLeft = Math.abs(player.x - box.x);
+      const toRight = Math.abs(player.x - (box.x + box.width));
+      const toTop = Math.abs(player.y - box.y);
+      const toBottom = Math.abs(player.y - (box.y + box.height));
+      const min = Math.min(toLeft, toRight, toTop, toBottom);
+      if (min === toLeft) {
+        nx = -1;
+        ny = 0;
+      } else if (min === toRight) {
+        nx = 1;
+        ny = 0;
+      } else if (min === toTop) {
+        nx = 0;
+        ny = -1;
+      } else {
+        nx = 0;
+        ny = 1;
+      }
+    }
+
+    if (allowInside) {
+      player.x -= nx * overlap;
+      player.y -= ny * overlap;
+    } else {
+      player.x += nx * overlap;
+      player.y += ny * overlap;
+    }
+    player.vx *= 0.6;
+    player.vy *= 0.6;
+  };
+
+  teams[0].players.forEach((player) => resolveBoxOverlap(player, leftBox, false));
+  teams[1].players.forEach((player) => resolveBoxOverlap(player, rightBox, false));
+  if (teams[0].goalie) {
+    resolveBoxOverlap(teams[0].goalie, leftBox, true);
+  }
+  if (teams[1].goalie) {
+    resolveBoxOverlap(teams[1].goalie, rightBox, true);
+  }
 }
 
 function keepBallInBounds() {
