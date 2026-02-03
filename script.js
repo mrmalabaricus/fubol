@@ -225,6 +225,7 @@ const physics = {
   maxPower: 12,
   playerDamageScale: 6,
   koTurns: 2,
+  playerBounceScale: 0.55,
 };
 
 const teams = [
@@ -705,8 +706,10 @@ function handleCollisions() {
       ball.y += ny * overlap;
       const kickPower = 0.6 + (player.isGoalie ? 0.4 : 0.2);
       const strengthBoost = player.profile?.strength ?? 1;
-      ball.vx += nx * kickPower * 10 * strengthBoost;
-      ball.vy += ny * kickPower * 10 * strengthBoost;
+      const movementBoost = Math.min(1, Math.hypot(player.vx, player.vy) / 6);
+      const bounceScale = 0.35 + physics.playerBounceScale * movementBoost;
+      ball.vx += nx * kickPower * 10 * strengthBoost * bounceScale;
+      ball.vy += ny * kickPower * 10 * strengthBoost * bounceScale;
     }
   });
 }
