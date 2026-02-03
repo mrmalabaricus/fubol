@@ -4,6 +4,7 @@ const scoreEl = document.getElementById("score");
 const statusEl = document.getElementById("status");
 const winEl = document.getElementById("win");
 const startScreen = document.getElementById("startScreen");
+const menuScreen = document.getElementById("menuScreen");
 
 const field = {
   width: canvas.width,
@@ -215,6 +216,8 @@ const state = {
   winner: null,
   turnInProgress: false,
   started: false,
+  mode: null,
+  playerCount: 4,
   confetti: [],
   goalPause: false,
   items: [],
@@ -296,20 +299,17 @@ function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
 function setupPlayers() {
   const spacingY = 90;
   const startY = field.center.y - spacingY * 1.5;
-  const lineups = {
-    teamA: ["jugador01", "jugador02", "jugador03", "jugador04"],
-    teamB: ["jugador12", "jugador11", "jugador10", "jugador09"],
-  };
+  const lineups = getLineups();
   const getPlayer = (id) => rosterPlayers.find((player) => player.id === id);
   const teamAPlayers = lineups.teamA.map((id) => getPlayer(id));
   const teamBPlayers = lineups.teamB.map((id) => getPlayer(id));
-  const formationA = getFormationPositions(0);
-  const formationB = getFormationPositions(1);
+  const formationA = getFormationPositions(0, teamAPlayers.length);
+  const formationB = getFormationPositions(1, teamBPlayers.length);
 
-  teams[0].players = Array.from({ length: 4 }, (_, i) =>
+  teams[0].players = Array.from({ length: teamAPlayers.length }, (_, i) =>
     createPlayer(0, formationA[i].x, formationA[i].y, teamAPlayers[i])
   );
-  teams[1].players = Array.from({ length: 4 }, (_, i) =>
+  teams[1].players = Array.from({ length: teamBPlayers.length }, (_, i) =>
     createPlayer(1, formationB[i].x, formationB[i].y, teamBPlayers[i])
   );
 
@@ -324,9 +324,11 @@ function resetPositions(scoringTeam) {
   ball.y = field.center.y;
   ball.vx = 0;
   ball.vy = 0;
+  state.extraBalls = [];
+  state.goalWalls = [];
 
-  const formationA = getFormationPositions(0);
-  const formationB = getFormationPositions(1);
+  const formationA = getFormationPositions(0, teams[0].players.length);
+  const formationB = getFormationPositions(1, teams[1].players.length);
   teams[0].players.forEach((player, i) => {
     player.x = formationA[i].x;
     player.y = formationA[i].y;
@@ -360,10 +362,11 @@ function resetPositions(scoringTeam) {
   teams[1].goalie.health = teams[1].goalie.maxHealth;
   teams[1].goalie.koTurns = 0;
   teams[1].goalie.paralyzedTurns = 0;
-
-  state.items = [];
-  state.extraBalls = [];
-  state.goalWalls = [];
+  if (scoringTeam === null) {
+    state.items = [];
+    state.extraBalls = [];
+    state.goalWalls = [];
+  }
 
   state.selected = null;
   state.dragging = false;
@@ -372,24 +375,29 @@ function resetPositions(scoringTeam) {
   updateStatus();
 }
 
-function getFormationPositions(teamIndex) {
+function getFormationPositions(teamIndex, count) {
   const spacingY = 90;
   const startY = field.center.y - spacingY * 1.5;
   const goalieX = teamIndex === 0 ? 60 : field.width - 60;
   const defenderX = teamIndex === 0 ? 160 : field.width - 160;
   const midfielderX = teamIndex === 0 ? 280 : field.width - 280;
 
-  return Object.assign(
-    [
-      { x: defenderX, y: startY + spacingY * 0 },
-      { x: defenderX, y: startY + spacingY * 1 },
-      { x: midfielderX, y: startY + spacingY * 2 },
-      { x: midfielderX, y: startY + spacingY * 3 },
-    ],
-    {
-      goalie: { x: goalieX, y: field.center.y },
-    }
-  );
+  const positions = [];
+  if (count === 1) {
+    positions.push({ x: midfielderX, y: field.center.y });
+  } else if (count === 2) {
+    positions.push({ x: defenderX, y: startY + spacingY * 1 });
+    positions.push({ x: midfielderX, y: startY + spacingY * 2 });
+  } else {
+    positions.push({ x: defenderX, y: startY + spacingY * 0 });
+    positions.push({ x: defenderX, y: startY + spacingY * 1 });
+    positions.push({ x: midfielderX, y: startY + spacingY * 2 });
+    positions.push({ x: midfielderX, y: startY + spacingY * 3 });
+  }
+
+  return Object.assign(positions, {
+    goalie: { x: goalieX, y: field.center.y },
+  });
 }
 
 function updateStatus() {
@@ -970,6 +978,9 @@ function update() {
     nextTurn();
     state.turnInProgress = false;
   }
+  if (shouldRunCpuTurn()) {
+    runCpuTurn();
+  }
 
   draw();
   requestAnimationFrame(update);
@@ -1125,6 +1136,10 @@ function getMousePos(event) {
 }
 
 function selectPlayerAt(pos) {
+  if (state.mode === "cpu" && state.turn === 1) {
+    state.selected = null;
+    return;
+  }
   const candidates = teams[state.turn].players.filter(
     (player) => player.koTurns === 0 && player.paralyzedTurns === 0
   );
@@ -1140,6 +1155,63 @@ function selectPlayerAt(pos) {
     (player) => Math.hypot(player.x - pos.x, player.y - pos.y) <= player.radius
   );
   state.selected = hit || null;
+}
+
+function getLineups() {
+  const ids = rosterPlayers.map((player) => player.id);
+  const pickRandom = (count) =>
+    [...ids].sort(() => Math.random() - 0.5).slice(0, count);
+  if (state.mode === "1v1") {
+    return {
+      teamA: pickRandom(1),
+      teamB: pickRandom(1),
+    };
+  }
+  if (state.mode === "quick") {
+    return {
+      teamA: pickRandom(4),
+      teamB: pickRandom(4),
+    };
+  }
+  return {
+    teamA: pickRandom(4),
+    teamB: pickRandom(4),
+  };
+}
+
+function shouldRunCpuTurn() {
+  return (
+    state.started &&
+    state.mode === "cpu" &&
+    state.turn === 1 &&
+    !state.dragging &&
+    !state.turnInProgress &&
+    allStopped() &&
+    !state.goalPause
+  );
+}
+
+function runCpuTurn() {
+  const candidates = teams[1].players.filter(
+    (player) => player.koTurns === 0 && player.paralyzedTurns === 0
+  );
+  if (candidates.length === 0) {
+    return;
+  }
+  const targetPlayer = candidates.reduce((closest, player) => {
+    const d = Math.hypot(player.x - ball.x, player.y - ball.y);
+    if (!closest) return { player, d };
+    return d < closest.d ? { player, d } : closest;
+  }, null).player;
+
+  const dx = ball.x - targetPlayer.x;
+  const dy = ball.y - targetPlayer.y;
+  const angle = Math.atan2(dy, dx);
+  const power = physics.maxPower * 0.85;
+  targetPlayer.vx = Math.cos(angle) * power;
+  targetPlayer.vy = Math.sin(angle) * power;
+  state.turnInProgress = true;
+  state.selected = null;
 }
 
 function canUseGoalie() {
@@ -1210,8 +1282,27 @@ function startGame() {
   if (state.started) return;
   state.started = true;
   document.body.classList.add("started");
+  menuScreen.classList.add("hidden");
   startScreen.classList.add("hidden");
+  configureMatch(state.mode || "quick");
 }
 
-startScreen.addEventListener("pointerdown", startGame);
-window.addEventListener("keydown", startGame);
+function showMenu() {
+  startScreen.classList.add("hidden");
+  menuScreen.classList.remove("hidden");
+}
+
+function configureMatch(mode) {
+  state.mode = mode;
+  state.playerCount = mode === "1v1" ? 1 : 4;
+  resetPositions(null);
+}
+
+startScreen.addEventListener("pointerdown", showMenu);
+window.addEventListener("keydown", showMenu);
+menuScreen.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-mode]");
+  if (!button) return;
+  state.mode = button.dataset.mode;
+  startGame();
+});
