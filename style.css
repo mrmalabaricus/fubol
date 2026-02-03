@@ -23,6 +23,13 @@ body {
   flex-direction: column;
   gap: 8px;
   align-items: center;
+  width: 100%;
+}
+
+.hud > * {
+  max-width: 960px;
+  width: 100%;
+  text-align: center;
 }
 
 .scoreboard {

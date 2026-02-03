@@ -7,8 +7,8 @@ const winEl = document.getElementById("win");
 const field = {
   width: canvas.width,
   height: canvas.height,
-  goalWidth: 140,
-  goalDepth: 20,
+  goalWidth: 180,
+  goalDepth: 28,
   center: { x: canvas.width / 2, y: canvas.height / 2 },
 };
 
