@@ -509,6 +509,12 @@ function clamp(value, min, max) {
 }
 
 function updateGoalie(goalie) {
+  const isManual =
+    state.selected === goalie ||
+    (state.turn === goalie.team && state.turnInProgress);
+  if (isManual) {
+    return;
+  }
   const areaTop = field.center.y - field.goalWidth / 2 + 16;
   const areaBottom = field.center.y + field.goalWidth / 2 - 16;
   const targetY = clamp(ball.y, areaTop, areaBottom);
@@ -558,8 +564,6 @@ function applyPhysics() {
           goalieBox.y + entity.radius,
           goalieBox.y + goalieBox.height - entity.radius
         );
-        entity.vx = 0;
-        entity.vy = 0;
       } else {
         if (entity.x - entity.radius < padding) {
           entity.x = padding + entity.radius;
@@ -582,70 +586,8 @@ function applyPhysics() {
   });
 
   keepBallInBounds();
-  keepPlayersOutOfGoalBoxes();
   handleCollisions();
   teams.forEach((team) => updateGoalie(team.goalie));
-}
-
-function keepPlayersOutOfGoalBoxes() {
-  const leftBox = getGoalBox(0);
-  const rightBox = getGoalBox(1);
-
-  const resolveBoxOverlap = (player, box, allowInside) => {
-    const closestX = clamp(player.x, box.x, box.x + box.width);
-    const closestY = clamp(player.y, box.y, box.y + box.height);
-    const dx = player.x - closestX;
-    const dy = player.y - closestY;
-    const distance = Math.hypot(dx, dy);
-    if (distance >= player.radius) return;
-
-    const overlap = player.radius - (distance || 0.0001);
-    let nx = dx / (distance || 0.0001);
-    let ny = dy / (distance || 0.0001);
-
-    if (distance === 0) {
-      const toLeft = Math.abs(player.x - box.x);
-      const toRight = Math.abs(player.x - (box.x + box.width));
-      const toTop = Math.abs(player.y - box.y);
-      const toBottom = Math.abs(player.y - (box.y + box.height));
-      const min = Math.min(toLeft, toRight, toTop, toBottom);
-      if (min === toLeft) {
-        nx = -1;
-        ny = 0;
-      } else if (min === toRight) {
-        nx = 1;
-        ny = 0;
-      } else if (min === toTop) {
-        nx = 0;
-        ny = -1;
-      } else {
-        nx = 0;
-        ny = 1;
-      }
-    }
-
-    const rebound = 0.25;
-    if (allowInside) {
-      player.x -= nx * overlap;
-      player.y -= ny * overlap;
-      player.vx = 0;
-      player.vy = 0;
-    } else {
-      player.x += nx * overlap;
-      player.y += ny * overlap;
-      player.vx = nx * Math.abs(player.vx) * rebound;
-      player.vy = ny * Math.abs(player.vy) * rebound;
-    }
-  };
-
-  teams[0].players.forEach((player) => {
-    resolveBoxOverlap(player, leftBox, false);
-    resolveBoxOverlap(player, rightBox, false);
-  });
-  teams[1].players.forEach((player) => {
-    resolveBoxOverlap(player, leftBox, false);
-    resolveBoxOverlap(player, rightBox, false);
-  });
 }
 
 function getGoalBox(teamIndex) {
