@@ -77,6 +77,7 @@ body:not(.started) .game {
   grid-template-columns: 1fr 280px;
   gap: 24px;
   align-items: start;
+  justify-items: center;
 }
 
 .start-screen {
@@ -158,6 +159,9 @@ body:not(.started) .game {
   background: #3a5373;
 }
 .field-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 18px;
   background: radial-gradient(circle at center, #1c6e3a 0%, #0d3a1c 65%, #0a2a14 100%);
   border-radius: 24px;
@@ -167,6 +171,8 @@ body:not(.started) .game {
 
 canvas {
   width: 100%;
+  max-width: 100%;
+  height: auto;
   background: transparent;
   border-radius: 16px;
   display: block;

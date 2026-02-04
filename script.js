@@ -6,12 +6,58 @@ const winEl = document.getElementById("win");
 const startScreen = document.getElementById("startScreen");
 const menuScreen = document.getElementById("menuScreen");
 
+const SCALE = 90 / 64;
+const scaleValue = (value) => value * SCALE;
+const unscaleValue = (value) => value / SCALE;
+
+const BASE_DIMENSIONS = {
+  fieldWidth: 960,
+  fieldHeight: 540,
+  goalWidth: unscaleValue(240),
+  goalDepth: unscaleValue(28),
+  boxDepth: unscaleValue(150),
+  fieldPadding: unscaleValue(30),
+  centerCircleRadius: unscaleValue(70),
+  spacingY: unscaleValue(90),
+  goalieOffset: unscaleValue(60),
+  defenderOffset: unscaleValue(160),
+  midfielderOffset: unscaleValue(280),
+  playerRadius: unscaleValue(18),
+  goalieRadius: unscaleValue(20),
+  ballRadius: unscaleValue(12),
+  itemRadius: unscaleValue(12),
+  healthBarWidth: unscaleValue(42),
+  healthBarHeight: unscaleValue(6),
+  healthBarOffset: unscaleValue(14),
+  koStarRadius: unscaleValue(6),
+  koStarSpacing: unscaleValue(16),
+  koStarOffset: unscaleValue(28),
+  paralyzeRayWidth: unscaleValue(24),
+  paralyzeRayHeight: unscaleValue(48),
+  paralyzeRayOffset: unscaleValue(8),
+  aimGuideMax: unscaleValue(120),
+  aimGuideDash: unscaleValue(6),
+  aimGuideBarWidth: unscaleValue(140),
+  aimGuideBarHeight: unscaleValue(12),
+  aimGuideBarOffset: unscaleValue(36),
+  goalieInset: unscaleValue(16),
+  goalWallThickness: unscaleValue(10),
+  itemSpawnPadding: unscaleValue(80),
+};
+
+const DIMENSIONS = Object.fromEntries(
+  Object.entries(BASE_DIMENSIONS).map(([key, value]) => [key, scaleValue(value)])
+);
+
+canvas.width = Math.round(DIMENSIONS.fieldWidth);
+canvas.height = Math.round(DIMENSIONS.fieldHeight);
+
 const field = {
   width: canvas.width,
   height: canvas.height,
-  goalWidth: 240,
-  goalDepth: 28,
-  boxDepth: 150,
+  goalWidth: DIMENSIONS.goalWidth,
+  goalDepth: DIMENSIONS.goalDepth,
+  boxDepth: DIMENSIONS.boxDepth,
   center: { x: canvas.width / 2, y: canvas.height / 2 },
 };
 
@@ -58,11 +104,6 @@ function drawImageOrPlaceholder(src, x, y, width, height, color) {
   const record = getImage(src);
   if (record.loaded) {
     ctx.drawImage(record.img, x, y, width, height);
-  } else {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, width, height);
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.strokeRect(x, y, width, height);
   }
 }
 
@@ -285,7 +326,7 @@ const physics = {
   koTurns: 2,
   playerBounceScale: 0.55,
   collisionDamageMin: 0.6,
-  itemRadius: 12,
+  itemRadius: DIMENSIONS.itemRadius,
   itemSpawnChance: 0.35,
   itemBounce: 0.4,
   itemEffectTurns: 2,
@@ -314,7 +355,7 @@ const teams = [
 const ball = {
   x: field.center.x,
   y: field.center.y,
-  radius: 12,
+  radius: DIMENSIONS.ballRadius,
   vx: 0,
   vy: 0,
 };
@@ -336,7 +377,7 @@ function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
     image: playerConfig.image,
     x,
     y,
-    radius: isGoalie ? 20 : 18,
+    radius: isGoalie ? DIMENSIONS.goalieRadius : DIMENSIONS.playerRadius,
     vx: 0,
     vy: 0,
     isGoalie,
@@ -348,7 +389,7 @@ function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
 }
 
 function setupPlayers() {
-  const spacingY = 90;
+  const spacingY = DIMENSIONS.spacingY;
   const startY = field.center.y - spacingY * 1.5;
   const lineups = getLineups();
   const getPlayer = (id) => rosterPlayers.find((player) => player.id === id);
@@ -427,11 +468,16 @@ function resetPositions(scoringTeam) {
 }
 
 function getFormationPositions(teamIndex, count) {
-  const spacingY = 90;
+  const spacingY = DIMENSIONS.spacingY;
   const startY = field.center.y - spacingY * 1.5;
-  const goalieX = teamIndex === 0 ? 60 : field.width - 60;
-  const defenderX = teamIndex === 0 ? 160 : field.width - 160;
-  const midfielderX = teamIndex === 0 ? 280 : field.width - 280;
+  const goalieX =
+    teamIndex === 0 ? DIMENSIONS.goalieOffset : field.width - DIMENSIONS.goalieOffset;
+  const defenderX =
+    teamIndex === 0 ? DIMENSIONS.defenderOffset : field.width - DIMENSIONS.defenderOffset;
+  const midfielderX =
+    teamIndex === 0
+      ? DIMENSIONS.midfielderOffset
+      : field.width - DIMENSIONS.midfielderOffset;
 
   const positions = [];
   if (count === 1) {
@@ -474,18 +520,23 @@ function drawField() {
   ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
   ctx.lineWidth = 2;
   ctx.setLineDash([]);
-  ctx.strokeRect(30, 30, field.width - 60, field.height - 60);
+  ctx.strokeRect(
+    DIMENSIONS.fieldPadding,
+    DIMENSIONS.fieldPadding,
+    field.width - DIMENSIONS.fieldPadding * 2,
+    field.height - DIMENSIONS.fieldPadding * 2
+  );
 
   drawGoalBox(0);
   drawGoalBox(1);
 
   ctx.beginPath();
-  ctx.arc(field.center.x, field.center.y, 70, 0, Math.PI * 2);
+  ctx.arc(field.center.x, field.center.y, DIMENSIONS.centerCircleRadius, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(field.center.x, 30);
-  ctx.lineTo(field.center.x, field.height - 30);
+  ctx.moveTo(field.center.x, DIMENSIONS.fieldPadding);
+  ctx.lineTo(field.center.x, field.height - DIMENSIONS.fieldPadding);
   ctx.stroke();
 
   drawGoal(0);
@@ -503,7 +554,10 @@ function drawGoalBox(teamIndex) {
 function drawGoal(teamIndex) {
   const goalMouth = getGoalMouth(teamIndex);
   const goalY = goalMouth.top;
-  const x = teamIndex === 0 ? 30 - field.goalDepth : field.width - 30;
+  const x =
+    teamIndex === 0
+      ? DIMENSIONS.fieldPadding - field.goalDepth
+      : field.width - DIMENSIONS.fieldPadding;
   ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
   ctx.fillRect(x, goalY, field.goalDepth, goalMouth.height);
   ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
@@ -537,10 +591,10 @@ function drawPlayer(player) {
 }
 
 function drawHealthBar(player) {
-  const barWidth = 42;
-  const barHeight = 6;
+  const barWidth = DIMENSIONS.healthBarWidth;
+  const barHeight = DIMENSIONS.healthBarHeight;
   const x = player.x - barWidth / 2;
-  const y = player.y - player.radius - 14;
+  const y = player.y - player.radius - DIMENSIONS.healthBarOffset;
   const healthRatio = Math.max(player.health / player.maxHealth, 0);
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
@@ -555,10 +609,10 @@ function drawHealthBar(player) {
 
 function drawKoStars(player) {
   const starCount = 3;
-  const radius = 6;
-  const spacing = 16;
+  const radius = DIMENSIONS.koStarRadius;
+  const spacing = DIMENSIONS.koStarSpacing;
   const startX = player.x - ((starCount - 1) * spacing) / 2;
-  const y = player.y - player.radius - 28;
+  const y = player.y - player.radius - DIMENSIONS.koStarOffset;
 
   for (let i = 0; i < starCount; i += 1) {
     drawStar(startX + i * spacing, y, radius, 5);
@@ -588,10 +642,10 @@ function drawStar(cx, cy, outerRadius, points) {
 }
 
 function drawParalyzeRay(player) {
-  const rayWidth = 24;
-  const rayHeight = 48;
+  const rayWidth = DIMENSIONS.paralyzeRayWidth;
+  const rayHeight = DIMENSIONS.paralyzeRayHeight;
   const x = player.x - rayWidth / 2;
-  const y = player.y - player.radius - rayHeight - 8;
+  const y = player.y - player.radius - rayHeight - DIMENSIONS.paralyzeRayOffset;
   drawImageOrPlaceholder(
     itemAssets.paralyzeRay,
     x,
@@ -658,7 +712,10 @@ function drawGoalWalls() {
     const upperHeight = goalMouth.top - goalY;
     const lowerStart = goalMouth.bottom;
     const lowerHeight = goalY + field.goalWidth - goalMouth.bottom;
-    const x = wall.teamIndex === 0 ? 30 - field.goalDepth : field.width - 30;
+    const x =
+      wall.teamIndex === 0
+        ? DIMENSIONS.fieldPadding - field.goalDepth
+        : field.width - DIMENSIONS.fieldPadding;
     ctx.fillStyle = "rgba(255,255,255,0.45)";
     if (upperHeight > 0) {
       ctx.fillRect(x, goalY, field.goalDepth, upperHeight);
@@ -675,13 +732,13 @@ function drawAimGuide() {
   }
   const dx = state.dragCurrent.x - state.dragStart.x;
   const dy = state.dragCurrent.y - state.dragStart.y;
-  const distance = Math.min(Math.hypot(dx, dy), 120);
+  const distance = Math.min(Math.hypot(dx, dy), DIMENSIONS.aimGuideMax);
   const angle = Math.atan2(dy, dx) + Math.PI;
 
   ctx.save();
   ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
   ctx.lineWidth = 2;
-  ctx.setLineDash([6, 6]);
+  ctx.setLineDash([DIMENSIONS.aimGuideDash, DIMENSIONS.aimGuideDash]);
   ctx.beginPath();
   ctx.moveTo(state.dragStart.x, state.dragStart.y);
   ctx.lineTo(
@@ -691,11 +748,11 @@ function drawAimGuide() {
   ctx.stroke();
   ctx.restore();
 
-  const power = Math.min(distance / 120, 1);
-  const barWidth = 140;
-  const barHeight = 12;
+  const power = Math.min(distance / DIMENSIONS.aimGuideMax, 1);
+  const barWidth = DIMENSIONS.aimGuideBarWidth;
+  const barHeight = DIMENSIONS.aimGuideBarHeight;
   const barX = state.dragStart.x - barWidth / 2;
-  const barY = state.dragStart.y - 36;
+  const barY = state.dragStart.y - DIMENSIONS.aimGuideBarOffset;
 
   ctx.fillStyle = "rgba(0,0,0,0.4)";
   ctx.fillRect(barX, barY, barWidth, barHeight);
@@ -728,8 +785,8 @@ function updateGoalie(goalie) {
   if (isManual) {
     return;
   }
-  const areaTop = field.center.y - field.goalWidth / 2 + 16;
-  const areaBottom = field.center.y + field.goalWidth / 2 - 16;
+  const areaTop = field.center.y - field.goalWidth / 2 + DIMENSIONS.goalieInset;
+  const areaBottom = field.center.y + field.goalWidth / 2 - DIMENSIONS.goalieInset;
   const targetY = clamp(ball.y, areaTop, areaBottom);
   goalie.y += (targetY - goalie.y) * 0.05;
 
@@ -766,7 +823,7 @@ function applyPhysics() {
     if (Math.abs(player.vx) < physics.minSpeed) player.vx = 0;
     if (Math.abs(player.vy) < physics.minSpeed) player.vy = 0;
 
-    const padding = 30;
+    const padding = DIMENSIONS.fieldPadding;
     const rebound = 0.6;
     if (player.isGoalie) {
       const goalieBox = getGoalBox(player.team);
@@ -811,7 +868,10 @@ function applyPhysics() {
 function getGoalBox(teamIndex) {
   const goalY = field.center.y - field.goalWidth / 2;
   return {
-    x: teamIndex === 0 ? 30 : field.width - 30 - field.boxDepth,
+    x:
+      teamIndex === 0
+        ? DIMENSIONS.fieldPadding
+        : field.width - DIMENSIONS.fieldPadding - field.boxDepth,
     y: goalY,
     width: field.boxDepth,
     height: field.goalWidth,
@@ -836,46 +896,53 @@ function keepBallInBounds(ballObj) {
   }
   const leftGoal = getGoalMouth(0);
   const rightGoal = getGoalMouth(1);
-  const wallThickness = 10;
+  const wallThickness = DIMENSIONS.goalWallThickness;
   if (
-    ballObj.y - ballObj.radius < 30 ||
-    ballObj.y + ballObj.radius > field.height - 30
+    ballObj.y - ballObj.radius < DIMENSIONS.fieldPadding ||
+    ballObj.y + ballObj.radius > field.height - DIMENSIONS.fieldPadding
   ) {
     ballObj.vy *= -0.8;
     ballObj.y = clamp(
       ballObj.y,
-      30 + ballObj.radius,
-      field.height - 30 - ballObj.radius
+      DIMENSIONS.fieldPadding + ballObj.radius,
+      field.height - DIMENSIONS.fieldPadding - ballObj.radius
     );
   }
 
-  if (ballObj.x - ballObj.radius < 30) {
+  if (ballObj.x - ballObj.radius < DIMENSIONS.fieldPadding) {
     if (ballObj.y > leftGoal.top && ballObj.y < leftGoal.bottom) {
       const hasWall = state.goalWalls.some((wall) => wall.teamIndex === 0);
-      if (hasWall && ballObj.x - ballObj.radius < 30 + wallThickness) {
+      if (
+        hasWall &&
+        ballObj.x - ballObj.radius < DIMENSIONS.fieldPadding + wallThickness
+      ) {
         ballObj.vx = Math.abs(ballObj.vx) * 0.8;
-        ballObj.x = 30 + wallThickness + ballObj.radius;
+        ballObj.x = DIMENSIONS.fieldPadding + wallThickness + ballObj.radius;
       } else {
         score(1);
       }
     } else {
       ballObj.vx *= -0.8;
-      ballObj.x = 30 + ballObj.radius;
+      ballObj.x = DIMENSIONS.fieldPadding + ballObj.radius;
     }
   }
 
-  if (ballObj.x + ballObj.radius > field.width - 30) {
+  if (ballObj.x + ballObj.radius > field.width - DIMENSIONS.fieldPadding) {
     if (ballObj.y > rightGoal.top && ballObj.y < rightGoal.bottom) {
       const hasWall = state.goalWalls.some((wall) => wall.teamIndex === 1);
-      if (hasWall && ballObj.x + ballObj.radius > field.width - 30 - wallThickness) {
+      if (
+        hasWall &&
+        ballObj.x + ballObj.radius > field.width - DIMENSIONS.fieldPadding - wallThickness
+      ) {
         ballObj.vx = -Math.abs(ballObj.vx) * 0.8;
-        ballObj.x = field.width - 30 - wallThickness - ballObj.radius;
+        ballObj.x =
+          field.width - DIMENSIONS.fieldPadding - wallThickness - ballObj.radius;
       } else {
         score(0);
       }
     } else {
       ballObj.vx *= -0.8;
-      ballObj.x = field.width - 30 - ballObj.radius;
+      ballObj.x = field.width - DIMENSIONS.fieldPadding - ballObj.radius;
     }
   }
 }
@@ -1169,7 +1236,7 @@ function handleBallItemCollisions(balls) {
 function spawnRandomItem() {
   const types = ["double", "wall", "paralyze"];
   const type = types[Math.floor(Math.random() * types.length)];
-  const padding = 80;
+  const padding = DIMENSIONS.itemSpawnPadding;
   const x = padding + Math.random() * (field.width - padding * 2);
   const y = padding + Math.random() * (field.height - padding * 2);
   state.items.push({
@@ -1339,10 +1406,10 @@ canvas.addEventListener("pointerup", (event) => {
   if (!state.dragging || !state.selected) return;
   const dx = state.dragCurrent.x - state.dragStart.x;
   const dy = state.dragCurrent.y - state.dragStart.y;
-  const distance = Math.min(Math.hypot(dx, dy), 120);
+  const distance = Math.min(Math.hypot(dx, dy), DIMENSIONS.aimGuideMax);
   const angle = Math.atan2(dy, dx) + Math.PI;
   const speedFactor = state.selected.profile?.speed ?? 1;
-  const power = (distance / 120) * physics.maxPower * speedFactor;
+  const power = (distance / DIMENSIONS.aimGuideMax) * physics.maxPower * speedFactor;
 
   state.selected.vx = Math.cos(angle) * power;
   state.selected.vy = Math.sin(angle) * power;
