@@ -1591,7 +1591,7 @@ menuScreen.addEventListener("click", (event) => {
 
 lineupScreen.addEventListener("click", (event) => {
   const arrow = event.target.closest(".lineup-arrow");
-  if (!arrow || arrow.disabled) return;
+  if (!arrow) return;
   const slot = event.target.closest(".lineup-slot");
   if (!slot) return;
   const teamIndex = Number(slot.dataset.team);
@@ -1602,12 +1602,10 @@ lineupScreen.addEventListener("click", (event) => {
 });
 
 lineupBack.addEventListener("click", () => {
-  if (lineupBack.disabled) return;
   lineupScreen.classList.add("hidden");
   menuScreen.classList.remove("hidden");
 });
 
 lineupStart.addEventListener("click", () => {
-  if (lineupStart.disabled) return;
   startGame();
 });

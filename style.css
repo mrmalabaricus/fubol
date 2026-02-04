@@ -296,11 +296,6 @@ body:not(.started) .game {
   height: 30px;
 }
 
-.lineup-arrow:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 .lineup-arrow:hover {
   background: rgba(255, 255, 255, 0.18);
 }
@@ -320,10 +315,6 @@ body:not(.started) .game {
   cursor: pointer;
 }
 
-.lineup-actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
 
 .lineup-primary {
   background: #3f85ff;
