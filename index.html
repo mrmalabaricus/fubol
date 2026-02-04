@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tejo Fútbol Slider</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="start-screen" id="startScreen">
+      <div class="start-panel">
+        <img src="assets/fubol_logo.png" alt="Fubol" class="start-logo" />
+        <p>Press to start</p>
+      </div>
+    </div>
+    <div class="menu-screen hidden" id="menuScreen">
+      <div class="menu-panel">
+        <h2>Modo de juego</h2>
+        <button type="button" data-mode="quick">Quick Match (random)</button>
+        <button type="button" data-mode="1v1">1 vs 1</button>
+        <button type="button" data-mode="cpu">1 vs CPU</button>
+      </div>
+    </div>
+    <div class="lineup-screen hidden" id="lineupScreen">
+      <div class="lineup-panel">
+        <h2>Alineación 1 - 2 - 2</h2>
+        <p>Elegí el golero, defensas y mediocampistas antes del partido.</p>
+        <div class="lineup-field">
+          <div class="lineup-slot" data-team="0" data-slot="goalie">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Golero</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="0" data-slot="defender1">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Defensa 1</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="0" data-slot="defender2">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Defensa 2</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="0" data-slot="midfielder1">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Medio 1</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="0" data-slot="midfielder2">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Medio 2</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+
+          <div class="lineup-slot" data-team="1" data-slot="goalie">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Golero</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="1" data-slot="defender1">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Defensa 1</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="1" data-slot="defender2">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Defensa 2</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="1" data-slot="midfielder1">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Medio 1</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+          <div class="lineup-slot" data-team="1" data-slot="midfielder2">
+            <button type="button" class="lineup-arrow" data-direction="-1" disabled>
+              ◀
+            </button>
+            <div class="lineup-text">
+              <span class="lineup-label">Medio 2</span>
+              <span class="lineup-value"></span>
+            </div>
+            <button type="button" class="lineup-arrow" data-direction="1" disabled>
+              ▶
+            </button>
+          </div>
+        </div>
+        <div class="lineup-actions">
+          <button type="button" class="lineup-secondary" id="lineupBack" disabled>
+            Volver
+          </button>
+          <button type="button" class="lineup-primary" id="lineupStart" disabled>
+            Jugar
+          </button>
+        </div>
+      </div>
+    </div>
+    <main class="game">
+      <header class="hud">
+        <div class="scoreboard">
+          <span class="team team-a">Equipo Azul</span>
+          <span id="score">0 - 0</span>
+          <span class="team team-b">Equipo Rojo</span>
+        </div>
+        <div class="status" id="status">Turno: Equipo Azul</div>
+        <div class="win" id="win"></div>
+      </header>
+
+      <section class="playfield">
+        <div class="field-wrap">
+          <canvas id="field" width="960" height="540" aria-label="Cancha de fútbol"></canvas>
+        </div>
+        <!--
+          Assets placeholder:
+          - field_bg.png — 960x540, 1 frame. Uso: fondo de cancha.
+          - player_blue_sprite.png — 64x64, 6 frames. Uso: 4 jugadores azules.
+          - player_red_sprite.png — 64x64, 6 frames. Uso: 4 jugadores rojos.
+          - goalkeeper_blue.png — 72x72, 4 frames. Uso: arquero azul en área.
+          - goalkeeper_red.png — 72x72, 4 frames. Uso: arquero rojo en área.
+          - ball.png — 32x32, 1 frame. Uso: pelota.
+          - aim_line.png — 16x16, 1 frame (tile). Uso: línea punteada de dirección.
+          - power_bar.png — 200x24, 5 frames. Uso: barra de fuerza.
+          - start_bg.png — 1280x720, 1 frame. Uso: fondo pantalla inicio.
+          - fubol_logo.png — 480x200, 1 frame. Uso: logo pantalla inicio.
+          - menu_bg.png — 1280x720, 1 frame. Uso: fondo pantalla selección de modo.
+          - item_double.png — 48x48, 1 frame. Uso: ítem doble pelota.
+          - item_wall.png — 48x48, 1 frame. Uso: ítem muro de arco.
+          - item_paralyze.png — 48x48, 1 frame. Uso: ítem rayo paralizador.
+          - extra_ball.png — 32x32, 1 frame. Uso: pelota extra generada.
+          - goal_wall.png — 10x240, 1 frame. Uso: muro temporal en arco.
+          - paralyze_ray.png — 64x96, 6 frames. Uso: animación de rayo sobre jugador paralizado.
+
+          Controles:
+          Seleccioná un jugador de tu equipo, arrastrá para apuntar y soltá para lanzar.
+          El arquero no puede salir del área.
+        -->
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
