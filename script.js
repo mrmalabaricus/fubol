@@ -1338,10 +1338,7 @@ function initLineupState(mode) {
   const teamA = createRandomLineup();
   const teamB = createRandomLineup();
   state.lineups = { teamA, teamB };
-  const teamBSection = lineupScreen.querySelector('.lineup-team[data-team="1"]');
-  if (teamBSection) {
-    teamBSection.classList.toggle("hidden", mode === "cpu");
-  }
+  lineupScreen.classList.toggle("cpu", mode === "cpu");
   renderLineupUI();
 }
 
@@ -1385,23 +1382,20 @@ function cycleLineupSelection(teamIndex, slotKey, direction) {
 
 function renderLineupUI() {
   if (!state.lineups) return;
-  const teamSections = lineupScreen.querySelectorAll(".lineup-team");
-  teamSections.forEach((section) => {
-    const teamIndex = Number(section.dataset.team);
+  const slots = lineupScreen.querySelectorAll(".lineup-slot");
+  slots.forEach((slot) => {
+    const teamIndex = Number(slot.dataset.team);
     const lineup = getTeamLineup(teamIndex);
     if (!lineup) return;
-    const goalieSlot = section.querySelector('.lineup-slot[data-slot="goalie"]');
-    if (goalieSlot) {
-      const value = goalieSlot.querySelector(".lineup-value");
+    const value = slot.querySelector(".lineup-value");
+    if (slot.dataset.slot === "goalie") {
       value.textContent = rosterGoalkeepers[lineup.goalieIndex]?.name ?? "";
+      return;
     }
-    lineupSlots.forEach((slotKey, idx) => {
-      const slot = section.querySelector(`.lineup-slot[data-slot="${slotKey}"]`);
-      if (!slot) return;
-      const value = slot.querySelector(".lineup-value");
-      const playerIndex = lineup.playerIndices[idx];
-      value.textContent = rosterPlayers[playerIndex]?.name ?? "";
-    });
+    const slotIndex = lineupSlots.indexOf(slot.dataset.slot);
+    if (slotIndex === -1) return;
+    const playerIndex = lineup.playerIndices[slotIndex];
+    value.textContent = rosterPlayers[playerIndex]?.name ?? "";
   });
 }
 
