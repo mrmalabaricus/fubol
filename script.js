@@ -8,41 +8,40 @@ const menuScreen = document.getElementById("menuScreen");
 
 const SCALE = 90 / 64;
 const scaleValue = (value) => value * SCALE;
-const unscaleValue = (value) => value / SCALE;
 
 const BASE_DIMENSIONS = {
   fieldWidth: 960,
   fieldHeight: 540,
-  goalWidth: unscaleValue(240),
-  goalDepth: unscaleValue(28),
-  boxDepth: unscaleValue(150),
-  fieldPadding: unscaleValue(30),
-  centerCircleRadius: unscaleValue(70),
-  spacingY: unscaleValue(90),
-  goalieOffset: unscaleValue(60),
-  defenderOffset: unscaleValue(160),
-  midfielderOffset: unscaleValue(280),
-  playerRadius: unscaleValue(18),
-  goalieRadius: unscaleValue(20),
-  ballRadius: unscaleValue(12),
-  itemRadius: unscaleValue(12),
-  healthBarWidth: unscaleValue(42),
-  healthBarHeight: unscaleValue(6),
-  healthBarOffset: unscaleValue(14),
-  koStarRadius: unscaleValue(6),
-  koStarSpacing: unscaleValue(16),
-  koStarOffset: unscaleValue(28),
-  paralyzeRayWidth: unscaleValue(24),
-  paralyzeRayHeight: unscaleValue(48),
-  paralyzeRayOffset: unscaleValue(8),
-  aimGuideMax: unscaleValue(120),
-  aimGuideDash: unscaleValue(6),
-  aimGuideBarWidth: unscaleValue(140),
-  aimGuideBarHeight: unscaleValue(12),
-  aimGuideBarOffset: unscaleValue(36),
-  goalieInset: unscaleValue(16),
-  goalWallThickness: unscaleValue(10),
-  itemSpawnPadding: unscaleValue(80),
+  goalWidth: 240,
+  goalDepth: 28,
+  boxDepth: 150,
+  fieldPadding: 30,
+  centerCircleRadius: 70,
+  spacingY: 90,
+  goalieOffset: 60,
+  defenderOffset: 160,
+  midfielderOffset: 280,
+  playerRadius: 18,
+  goalieRadius: 20,
+  ballRadius: 12,
+  itemRadius: 12,
+  healthBarWidth: 42,
+  healthBarHeight: 6,
+  healthBarOffset: 14,
+  koStarRadius: 6,
+  koStarSpacing: 16,
+  koStarOffset: 28,
+  paralyzeRayWidth: 24,
+  paralyzeRayHeight: 48,
+  paralyzeRayOffset: 8,
+  aimGuideMax: 120,
+  aimGuideDash: 6,
+  aimGuideBarWidth: 140,
+  aimGuideBarHeight: 12,
+  aimGuideBarOffset: 36,
+  goalieInset: 16,
+  goalWallThickness: 10,
+  itemSpawnPadding: 80,
 };
 
 const DIMENSIONS = Object.fromEntries(
@@ -319,8 +318,8 @@ const state = {
 
 const physics = {
   friction: 0.985,
-  minSpeed: 0.12,
-  maxPower: 12,
+  minSpeed: 0.12 * SCALE,
+  maxPower: 12 * SCALE,
   playerDamageScale: 6,
   goalieDamageScale: 0,
   koTurns: 2,
@@ -964,7 +963,10 @@ function handleCollisions(balls, players) {
         ballObj.y += ny * overlap;
         const kickPower = 0.6 + (player.isGoalie ? 0.4 : 0.2);
         const strengthBoost = player.profile?.strength ?? 1;
-        const movementBoost = Math.min(1, Math.hypot(player.vx, player.vy) / 6);
+        const movementBoost = Math.min(
+          1,
+          Math.hypot(player.vx, player.vy) / (6 * SCALE)
+        );
         const bounceScale = 0.35 + physics.playerBounceScale * movementBoost;
         ballObj.vx += nx * kickPower * 10 * strengthBoost * bounceScale;
         ballObj.vy += ny * kickPower * 10 * strengthBoost * bounceScale;
@@ -1251,8 +1253,8 @@ function spawnRandomItem() {
 function applyItemEffect(item) {
   if (item.type === "double") {
     state.extraBalls.push({
-      x: ball.x + 12,
-      y: ball.y + 12,
+      x: ball.x + ball.radius,
+      y: ball.y + ball.radius,
       radius: ball.radius,
       vx: ball.vx,
       vy: ball.vy,
