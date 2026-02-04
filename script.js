@@ -5,6 +5,9 @@ const statusEl = document.getElementById("status");
 const winEl = document.getElementById("win");
 const startScreen = document.getElementById("startScreen");
 const menuScreen = document.getElementById("menuScreen");
+const lineupScreen = document.getElementById("lineupScreen");
+const lineupBack = document.getElementById("lineupBack");
+const lineupStart = document.getElementById("lineupStart");
 
 const SCALE = 90 / 64;
 const scaleValue = (value) => value * SCALE;
@@ -297,6 +300,8 @@ const rosterGoalkeepers = [
   },
 ];
 
+const lineupSlots = ["defender1", "defender2", "midfielder1", "midfielder2"];
+
 const state = {
   turn: 0,
   selected: null,
@@ -314,6 +319,7 @@ const state = {
   items: [],
   extraBalls: [],
   goalWalls: [],
+  lineups: null,
 };
 
 const physics = {
@@ -404,8 +410,8 @@ function setupPlayers() {
     createPlayer(1, formationB[i].x, formationB[i].y, teamBPlayers[i])
   );
 
-  const goalieA = rosterGoalkeepers.find((goalie) => goalie.id === "golero1");
-  const goalieB = rosterGoalkeepers.find((goalie) => goalie.id === "golero2");
+  const goalieA = rosterGoalkeepers.find((goalie) => goalie.id === lineups.goalieA);
+  const goalieB = rosterGoalkeepers.find((goalie) => goalie.id === lineups.goalieB);
   teams[0].goalie = createPlayer(0, formationA.goalie.x, formationA.goalie.y, goalieA, true);
   teams[1].goalie = createPlayer(1, formationB.goalie.x, formationB.goalie.y, goalieB, true);
 }
@@ -1313,25 +1319,136 @@ function selectPlayerAt(pos) {
   state.selected = hit || null;
 }
 
+function getRandomIndices(total, count) {
+  const indices = Array.from({ length: total }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices.slice(0, count);
+}
+
+function createRandomLineup() {
+  const goalieIndex = Math.floor(Math.random() * rosterGoalkeepers.length);
+  const playerIndices = getRandomIndices(rosterPlayers.length, lineupSlots.length);
+  return { goalieIndex, playerIndices };
+}
+
+function initLineupState(mode) {
+  const teamA = createRandomLineup();
+  const teamB = createRandomLineup();
+  state.lineups = { teamA, teamB };
+  const teamBSection = lineupScreen.querySelector('.lineup-team[data-team="1"]');
+  if (teamBSection) {
+    teamBSection.classList.toggle("hidden", mode === "cpu");
+  }
+  renderLineupUI();
+}
+
+function getTeamLineup(teamIndex) {
+  if (!state.lineups) return null;
+  return teamIndex === 0 ? state.lineups.teamA : state.lineups.teamB;
+}
+
+function cycleLineupSelection(teamIndex, slotKey, direction) {
+  const lineup = getTeamLineup(teamIndex);
+  if (!lineup) return;
+  if (slotKey === "goalie") {
+    const nextIndex =
+      (lineup.goalieIndex + direction + rosterGoalkeepers.length) %
+      rosterGoalkeepers.length;
+    lineup.goalieIndex = nextIndex;
+    return;
+  }
+  const slotIndex = lineupSlots.indexOf(slotKey);
+  if (slotIndex === -1) return;
+  const usedIds = new Set(
+    lineup.playerIndices
+      .map((index) => rosterPlayers[index]?.id)
+      .filter(Boolean)
+  );
+  const currentIndex = lineup.playerIndices[slotIndex];
+  if (currentIndex !== undefined) {
+    usedIds.delete(rosterPlayers[currentIndex]?.id);
+  }
+  let nextIndex = currentIndex ?? 0;
+  for (let i = 1; i <= rosterPlayers.length; i += 1) {
+    const candidate =
+      (nextIndex + direction * i + rosterPlayers.length) % rosterPlayers.length;
+    if (!usedIds.has(rosterPlayers[candidate].id)) {
+      nextIndex = candidate;
+      break;
+    }
+  }
+  lineup.playerIndices[slotIndex] = nextIndex;
+}
+
+function renderLineupUI() {
+  if (!state.lineups) return;
+  const teamSections = lineupScreen.querySelectorAll(".lineup-team");
+  teamSections.forEach((section) => {
+    const teamIndex = Number(section.dataset.team);
+    const lineup = getTeamLineup(teamIndex);
+    if (!lineup) return;
+    const goalieSlot = section.querySelector('.lineup-slot[data-slot="goalie"]');
+    if (goalieSlot) {
+      const value = goalieSlot.querySelector(".lineup-value");
+      value.textContent = rosterGoalkeepers[lineup.goalieIndex]?.name ?? "";
+    }
+    lineupSlots.forEach((slotKey, idx) => {
+      const slot = section.querySelector(`.lineup-slot[data-slot="${slotKey}"]`);
+      if (!slot) return;
+      const value = slot.querySelector(".lineup-value");
+      const playerIndex = lineup.playerIndices[idx];
+      value.textContent = rosterPlayers[playerIndex]?.name ?? "";
+    });
+  });
+}
+
 function getLineups() {
   const ids = rosterPlayers.map((player) => player.id);
   const pickRandom = (count) =>
     [...ids].sort(() => Math.random() - 0.5).slice(0, count);
-  if (state.mode === "1v1") {
-    return {
-      teamA: pickRandom(1),
-      teamB: pickRandom(1),
-    };
+  if (state.mode === "1v1" || state.mode === "cpu") {
+    if (state.lineups) {
+      const teamAPlayers = state.lineups.teamA.playerIndices.map(
+        (index) => rosterPlayers[index].id
+      );
+      const teamBPlayers =
+        state.mode === "cpu"
+          ? pickRandom(lineupSlots.length)
+          : state.lineups.teamB.playerIndices.map(
+              (index) => rosterPlayers[index].id
+            );
+      const goalieA = rosterGoalkeepers[state.lineups.teamA.goalieIndex]?.id;
+      const goalieB =
+        state.mode === "cpu"
+          ? rosterGoalkeepers[Math.floor(Math.random() * rosterGoalkeepers.length)]
+              ?.id
+          : rosterGoalkeepers[state.lineups.teamB.goalieIndex]?.id;
+      return {
+        teamA: teamAPlayers,
+        teamB: teamBPlayers,
+        goalieA,
+        goalieB,
+      };
+    }
   }
   if (state.mode === "quick") {
+    const teamA = pickRandom(4);
+    const teamB = pickRandom(4);
     return {
-      teamA: pickRandom(4),
-      teamB: pickRandom(4),
+      teamA,
+      teamB,
+      goalieA: rosterGoalkeepers[0]?.id,
+      goalieB: rosterGoalkeepers[1]?.id ?? rosterGoalkeepers[0]?.id,
     };
   }
   return {
     teamA: pickRandom(4),
     teamB: pickRandom(4),
+    goalieA: rosterGoalkeepers[0]?.id,
+    goalieB: rosterGoalkeepers[1]?.id ?? rosterGoalkeepers[0]?.id,
   };
 }
 
@@ -1441,17 +1558,27 @@ function startGame() {
   document.body.classList.add("started");
   menuScreen.classList.add("hidden");
   startScreen.classList.add("hidden");
+  lineupScreen.classList.add("hidden");
   configureMatch(state.mode || "quick");
 }
 
 function showMenu() {
   startScreen.classList.add("hidden");
   menuScreen.classList.remove("hidden");
+  lineupScreen.classList.add("hidden");
+}
+
+function showLineupScreen(mode) {
+  state.mode = mode;
+  startScreen.classList.add("hidden");
+  menuScreen.classList.add("hidden");
+  lineupScreen.classList.remove("hidden");
+  initLineupState(mode);
 }
 
 function configureMatch(mode) {
   state.mode = mode;
-  state.playerCount = mode === "1v1" ? 1 : 4;
+  state.playerCount = 4;
   resetPositions(null);
 }
 
@@ -1461,5 +1588,31 @@ menuScreen.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-mode]");
   if (!button) return;
   state.mode = button.dataset.mode;
+  if (state.mode === "quick") {
+    startGame();
+  } else {
+    showLineupScreen(state.mode);
+  }
+});
+
+lineupScreen.addEventListener("click", (event) => {
+  const arrow = event.target.closest(".lineup-arrow");
+  if (!arrow) return;
+  const slot = event.target.closest(".lineup-slot");
+  const team = event.target.closest(".lineup-team");
+  if (!slot || !team) return;
+  const teamIndex = Number(team.dataset.team);
+  if (state.mode === "cpu" && teamIndex === 1) return;
+  const direction = Number(arrow.dataset.direction);
+  cycleLineupSelection(teamIndex, slot.dataset.slot, direction);
+  renderLineupUI();
+});
+
+lineupBack.addEventListener("click", () => {
+  lineupScreen.classList.add("hidden");
+  menuScreen.classList.remove("hidden");
+});
+
+lineupStart.addEventListener("click", () => {
   startGame();
 });

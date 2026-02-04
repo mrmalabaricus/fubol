@@ -21,6 +21,84 @@
         <button type="button" data-mode="cpu">1 vs CPU</button>
       </div>
     </div>
+    <div class="lineup-screen hidden" id="lineupScreen">
+      <div class="lineup-panel">
+        <h2>Alineación 1 - 2 - 2</h2>
+        <p>Elegí el golero, defensas y mediocampistas antes del partido.</p>
+        <div class="lineup-grid">
+          <div class="lineup-team" data-team="0">
+            <h3>Equipo Azul</h3>
+            <div class="lineup-slot" data-slot="goalie">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Golero</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="defender1">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Defensa 1</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="defender2">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Defensa 2</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="midfielder1">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Medio 1</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="midfielder2">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Medio 2</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+          </div>
+          <div class="lineup-team" data-team="1">
+            <h3>Equipo Rojo</h3>
+            <div class="lineup-slot" data-slot="goalie">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Golero</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="defender1">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Defensa 1</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="defender2">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Defensa 2</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="midfielder1">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Medio 1</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+            <div class="lineup-slot" data-slot="midfielder2">
+              <button type="button" class="lineup-arrow" data-direction="-1">◀</button>
+              <span class="lineup-label">Medio 2</span>
+              <span class="lineup-value"></span>
+              <button type="button" class="lineup-arrow" data-direction="1">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="lineup-actions">
+          <button type="button" class="lineup-secondary" id="lineupBack">Volver</button>
+          <button type="button" class="lineup-primary" id="lineupStart">Jugar</button>
+        </div>
+      </div>
+    </div>
     <main class="game">
       <header class="hud">
         <div class="scoreboard">

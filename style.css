@@ -98,11 +98,25 @@ body:not(.started) .game {
   z-index: 9;
 }
 
+.lineup-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(7, 12, 18, 0.92);
+  z-index: 9;
+  padding: 24px;
+}
+
 .start-screen.hidden {
   display: none;
 }
 
 .menu-screen.hidden {
+  display: none;
+}
+
+.lineup-screen.hidden {
   display: none;
 }
 
@@ -157,6 +171,106 @@ body:not(.started) .game {
 
 .menu-panel button:hover {
   background: #3a5373;
+}
+
+.lineup-panel {
+  width: min(880px, 92vw);
+  background: rgba(15, 24, 36, 0.95);
+  border-radius: 20px;
+  padding: 28px 32px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  display: grid;
+  gap: 16px;
+  text-align: center;
+}
+
+.lineup-panel p {
+  margin: 0;
+  color: #b5c4d4;
+}
+
+.lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  text-align: left;
+}
+
+.lineup-team {
+  background: rgba(10, 16, 24, 0.65);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 10px;
+}
+
+.lineup-team.hidden {
+  display: none;
+}
+
+.lineup-team h3 {
+  margin: 0 0 8px;
+}
+
+.lineup-slot {
+  display: grid;
+  grid-template-columns: 32px 1fr auto 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  border-radius: 12px;
+  background: rgba(20, 30, 45, 0.7);
+}
+
+.lineup-label {
+  font-size: 13px;
+  color: #9fb0c2;
+}
+
+.lineup-value {
+  font-weight: 600;
+  color: #f5f5f5;
+  text-align: right;
+}
+
+.lineup-arrow {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f5f5;
+  border-radius: 8px;
+  cursor: pointer;
+  height: 30px;
+}
+
+.lineup-arrow:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.lineup-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.lineup-actions button {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lineup-primary {
+  background: #3f85ff;
+  color: #fff;
+}
+
+.lineup-secondary {
+  background: #2b3c52;
+  color: #f5f5f5;
 }
 .field-wrap {
   display: flex;
