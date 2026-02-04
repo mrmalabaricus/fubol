@@ -1593,9 +1593,8 @@ lineupScreen.addEventListener("click", (event) => {
   const arrow = event.target.closest(".lineup-arrow");
   if (!arrow) return;
   const slot = event.target.closest(".lineup-slot");
-  const team = event.target.closest(".lineup-team");
-  if (!slot || !team) return;
-  const teamIndex = Number(team.dataset.team);
+  if (!slot) return;
+  const teamIndex = Number(slot.dataset.team);
   if (state.mode === "cpu" && teamIndex === 1) return;
   const direction = Number(arrow.dataset.direction);
   cycleLineupSelection(teamIndex, slot.dataset.slot, direction);
