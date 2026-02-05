@@ -290,8 +290,8 @@
         <h2 id="gameOverTitle">Final del partido</h2>
         <div class="gameover-score" id="gameOverScore">0 - 0</div>
         <div class="gameover-actions">
-          <button type="button" class="lineup-primary" id="playAgainBtn">Jugar nuevamente</button>
-          <button type="button" class="lineup-secondary" id="changeSquadBtn">Cambiar cuadro</button>
+          <button type="button" class="lineup-primary placeholder-btn" id="playAgainBtn">Jugar nuevamente</button>
+          <button type="button" class="lineup-secondary placeholder-btn" id="changeSquadBtn">Cambiar cuadro</button>
         </div>
       </div>
     </div>
@@ -300,9 +300,9 @@
       <header class="hud">
         <div class="hud-board">
           <div class="board-cell score-cell">
-            <span class="team team-a">Equipo Azul</span>
+            <span class="team team-a">Home</span>
             <span id="score">0 - 0</span>
-            <span class="team team-b">Equipo Rojo</span>
+            <span class="team team-b">Away</span>
           </div>
           <div class="board-cell clock-cell">
             <span class="clock-label">Partido</span>
@@ -313,7 +313,7 @@
             <span id="turnClock">15</span>
           </div>
         </div>
-        <div class="status" id="status">Turno: Equipo Azul</div>
+        <div class="status" id="status">Turno: Home</div>
         <div class="win" id="win"></div>
       </header>
 
@@ -340,6 +340,8 @@
           - extra_ball.png — 32x32, 1 frame. Uso: pelota extra generada.
           - goal_wall.png — 10x240, 1 frame. Uso: muro temporal en arco.
           - paralyze_ray.png — 64x96, 6 frames. Uso: animación de rayo sobre jugador paralizado.
+          - menu_button_play.png — 320x84, 1 frame. Uso: placeholder botón "Jugar nuevamente" en menú final (vertical).
+          - menu_button_change.png — 320x84, 1 frame. Uso: placeholder botón "Cambiar cuadro" en menú final (vertical).
 
           Controles:
           Seleccioná un jugador de tu equipo, arrastrá para apuntar y soltá para lanzar.

@@ -159,10 +159,18 @@ body:not(.started) .game {
 }
 
 .gameover-actions {
-  display: flex;
+  display: grid;
   justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gameover-actions .placeholder-btn {
+  width: min(320px, 78vw);
+  min-height: 56px;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  background-image: linear-gradient(180deg, rgba(71, 109, 153, 0.95) 0%, rgba(35, 58, 84, 0.95) 100%);
+  background-size: cover;
+  background-position: center;
 }
 
 @media (max-width: 900px) {

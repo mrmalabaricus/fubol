@@ -389,7 +389,7 @@ function initUiAssetFallbacks() {
 
 const teams = [
   {
-    name: "Equipo Azul",
+    name: "Home",
     color: "#4aa3ff",
     goalX: 0,
     direction: 1,
@@ -397,7 +397,7 @@ const teams = [
     goalie: null,
   },
   {
-    name: "Equipo Rojo",
+    name: "Away",
     color: "#ff5b5b",
     goalX: field.width,
     direction: -1,
