@@ -603,7 +603,7 @@ function tickClocks(now) {
 
   state.matchTimeLeft = Math.max(0, state.matchTimeLeft - delta);
 
-  if (!state.turnInProgress && !state.dragging) {
+  if (!state.turnInProgress) {
     state.turnTimeLeft = Math.max(0, state.turnTimeLeft - delta);
     if (state.turnTimeLeft <= 0) {
       expireTurnByClock();
