@@ -1831,7 +1831,13 @@ function configureMatch(mode) {
   state.playerCount = 4;
   hideGameOverOverlay();
   state.winner = null;
+  state.turn = 0;
+  state.goalPause = false;
+  state.confetti = [];
+  state.scores = [0, 0];
+  scoreEl.textContent = "0 - 0";
   winEl.textContent = "";
+  setupPlayers();
   resetTimers();
   resetPositions(null);
 }
