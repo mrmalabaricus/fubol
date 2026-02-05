@@ -684,7 +684,32 @@ function drawGoal(teamIndex) {
   ctx.strokeRect(x, goalY, field.goalDepth, goalMouth.height);
 }
 
-function drawPlayer(player) {
+function isTurnSelectablePlayer(player) {
+  if (!player || player.team !== state.turn) return false;
+  if (player.koTurns > 0 || player.paralyzedTurns > 0) return false;
+  if (!player.isGoalie) return true;
+  return canUseGoalie();
+}
+
+function drawActiveTurnHighlight(player, pulse) {
+  if (!isTurnSelectablePlayer(player)) return;
+  const baseRadius = player.radius + 5 * SCALE;
+  const pulseRadius = baseRadius + pulse * (4 * SCALE);
+
+  ctx.save();
+  ctx.lineWidth = 2 + pulse * 1.6;
+  ctx.strokeStyle = `rgba(255,255,255,${0.55 + pulse * 0.35})`;
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, pulseRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPlayer(player, showTurnHighlights, pulse) {
+  if (showTurnHighlights) {
+    drawActiveTurnHighlight(player, pulse);
+  }
+
   const size = player.radius * 2.2;
   const color = player.isGoalie ? "#ffd66b" : teams[player.team].color;
   drawImageOrPlaceholder(
@@ -886,8 +911,19 @@ function draw() {
   drawField();
   drawItems();
   drawGoalWalls();
-  teams.forEach((team) => team.players.forEach(drawPlayer));
-  teams.forEach((team) => drawPlayer(team.goalie));
+
+  const showTurnHighlights =
+    state.started &&
+    state.winner === null &&
+    !state.goalPause &&
+    !state.turnInProgress &&
+    allStopped();
+  const pulse = (Math.sin(performance.now() / 230) + 1) * 0.5;
+
+  teams.forEach((team) =>
+    team.players.forEach((player) => drawPlayer(player, showTurnHighlights, pulse))
+  );
+  teams.forEach((team) => drawPlayer(team.goalie, showTurnHighlights, pulse));
   drawBall();
   drawExtraBalls();
   drawAimGuide();
