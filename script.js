@@ -591,12 +591,14 @@ function setWinnerByTime() {
   if (state.scores[0] === state.scores[1]) {
     state.winner = "draw";
     winEl.textContent = "Tiempo cumplido: empate.";
+    lockMatchControls();
     showGameOverOverlay(getWinnerTitle());
     return;
   }
   const winnerIndex = state.scores[0] > state.scores[1] ? 0 : 1;
   state.winner = winnerIndex;
   winEl.textContent = `${teams[winnerIndex].name} gana por tiempo.`;
+  lockMatchControls();
   showGameOverOverlay(getWinnerTitle());
 }
 
@@ -634,6 +636,26 @@ function hideGameOverOverlay() {
   gameOverScreen.classList.add("hidden");
 }
 
+function lockMatchControls() {
+  const entities = [
+    ball,
+    ...teams[0].players,
+    ...teams[1].players,
+    teams[0].goalie,
+    teams[1].goalie,
+    ...state.extraBalls,
+  ].filter(Boolean);
+  entities.forEach((entity) => {
+    entity.vx = 0;
+    entity.vy = 0;
+  });
+  state.selected = null;
+  state.dragging = false;
+  state.dragStart = null;
+  state.dragCurrent = null;
+  state.turnInProgress = false;
+}
+
 function getWinnerTitle() {
   if (state.winner === "draw") {
     return "Empate";
@@ -653,6 +675,7 @@ function setWinner() {
     const winnerIndex = state.scores[0] > state.scores[1] ? 0 : 1;
     state.winner = winnerIndex;
     winEl.textContent = `${teams[winnerIndex].name} gana por 3 goles de diferencia.`;
+    lockMatchControls();
     showGameOverOverlay(getWinnerTitle());
   } else {
     winEl.textContent = "";
@@ -1736,6 +1759,16 @@ canvas.addEventListener("pointermove", (event) => {
 });
 
 canvas.addEventListener("pointerup", (event) => {
+  if (state.winner !== null) {
+    state.dragging = false;
+    state.dragStart = null;
+    state.dragCurrent = null;
+    state.selected = null;
+    if (canvas.hasPointerCapture?.(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+    return;
+  }
   if (!state.dragging || !state.selected) return;
   const dx = state.dragCurrent.x - state.dragStart.x;
   const dy = state.dragCurrent.y - state.dragStart.y;
