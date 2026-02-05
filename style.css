@@ -224,23 +224,23 @@ body:not(.started) .game {
 }
 
 .lineup-slot[data-team="0"][data-slot="defender1"] {
-  left: 28%;
-  top: 32%;
+  left: 26%;
+  top: 30%;
 }
 
 .lineup-slot[data-team="0"][data-slot="defender2"] {
-  left: 28%;
-  top: 68%;
+  left: 30%;
+  top: 72%;
 }
 
 .lineup-slot[data-team="0"][data-slot="midfielder1"] {
-  left: 44%;
-  top: 32%;
+  left: 46%;
+  top: 40%;
 }
 
 .lineup-slot[data-team="0"][data-slot="midfielder2"] {
-  left: 44%;
-  top: 68%;
+  left: 42%;
+  top: 60%;
 }
 
 .lineup-slot[data-team="1"][data-slot="goalie"] {
@@ -249,23 +249,23 @@ body:not(.started) .game {
 }
 
 .lineup-slot[data-team="1"][data-slot="defender1"] {
-  left: 72%;
-  top: 32%;
+  left: 74%;
+  top: 30%;
 }
 
 .lineup-slot[data-team="1"][data-slot="defender2"] {
-  left: 72%;
-  top: 68%;
+  left: 70%;
+  top: 72%;
 }
 
 .lineup-slot[data-team="1"][data-slot="midfielder1"] {
-  left: 56%;
-  top: 32%;
+  left: 54%;
+  top: 40%;
 }
 
 .lineup-slot[data-team="1"][data-slot="midfielder2"] {
-  left: 56%;
-  top: 68%;
+  left: 58%;
+  top: 60%;
 }
 
 .lineup-card {
