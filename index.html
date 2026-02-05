@@ -287,10 +287,20 @@
     </div>
     <main class="game">
       <header class="hud">
-        <div class="scoreboard">
-          <span class="team team-a">Equipo Azul</span>
-          <span id="score">0 - 0</span>
-          <span class="team team-b">Equipo Rojo</span>
+        <div class="hud-board">
+          <div class="board-cell score-cell">
+            <span class="team team-a">Equipo Azul</span>
+            <span id="score">0 - 0</span>
+            <span class="team team-b">Equipo Rojo</span>
+          </div>
+          <div class="board-cell clock-cell">
+            <span class="clock-label">Partido</span>
+            <span id="matchClock">03:00</span>
+          </div>
+          <div class="board-cell clock-cell">
+            <span class="clock-label">Turno</span>
+            <span id="turnClock">15</span>
+          </div>
         </div>
         <div class="status" id="status">Turno: Equipo Azul</div>
         <div class="win" id="win"></div>

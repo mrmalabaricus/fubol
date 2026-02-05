@@ -3,6 +3,8 @@ const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const statusEl = document.getElementById("status");
 const winEl = document.getElementById("win");
+const matchClockEl = document.getElementById("matchClock");
+const turnClockEl = document.getElementById("turnClock");
 const startScreen = document.getElementById("startScreen");
 const menuScreen = document.getElementById("menuScreen");
 const lineupScreen = document.getElementById("lineupScreen");
@@ -50,6 +52,11 @@ const BASE_DIMENSIONS = {
 const DIMENSIONS = Object.fromEntries(
   Object.entries(BASE_DIMENSIONS).map(([key, value]) => [key, scaleValue(value)])
 );
+
+const TIMERS = {
+  matchMs: 3 * 60 * 1000,
+  turnMs: 15 * 1000,
+};
 
 canvas.width = Math.round(DIMENSIONS.fieldWidth);
 canvas.height = Math.round(DIMENSIONS.fieldHeight);
@@ -340,6 +347,9 @@ const state = {
   extraBalls: [],
   goalWalls: [],
   lineups: null,
+  matchTimeLeft: TIMERS.matchMs,
+  turnTimeLeft: TIMERS.turnMs,
+  lastFrameTime: 0,
 };
 
 const physics = {
@@ -503,7 +513,9 @@ function resetPositions(scoringTeam) {
   state.dragging = false;
   state.turnInProgress = false;
   state.turn = scoringTeam === null ? state.turn : scoringTeam === 0 ? 1 : 0;
+  state.turnTimeLeft = TIMERS.turnMs;
   updateStatus();
+  updateTimerHud();
 }
 
 function getFormationPositions(teamIndex, count) {
@@ -534,6 +546,75 @@ function getFormationPositions(teamIndex, count) {
   return Object.assign(positions, {
     goalie: { x: goalieX, y: field.center.y },
   });
+}
+
+function formatClock(ms) {
+  const clamped = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(clamped / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (clamped % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function updateTimerHud() {
+  matchClockEl.textContent = formatClock(state.matchTimeLeft);
+  turnClockEl.textContent = Math.max(0, Math.ceil(state.turnTimeLeft / 1000))
+    .toString()
+    .padStart(2, "0");
+}
+
+function resetTimers() {
+  state.matchTimeLeft = TIMERS.matchMs;
+  state.turnTimeLeft = TIMERS.turnMs;
+  state.lastFrameTime = performance.now();
+  updateTimerHud();
+}
+
+function expireTurnByClock() {
+  if (state.winner !== null || state.turnInProgress) return;
+  state.selected = null;
+  state.dragging = false;
+  state.dragStart = null;
+  state.dragCurrent = null;
+  nextTurn();
+  state.turnTimeLeft = TIMERS.turnMs;
+  updateTimerHud();
+}
+
+function setWinnerByTime() {
+  if (state.scores[0] === state.scores[1]) {
+    state.winner = "draw";
+    winEl.textContent = "Tiempo cumplido: empate.";
+    return;
+  }
+  const winnerIndex = state.scores[0] > state.scores[1] ? 0 : 1;
+  state.winner = winnerIndex;
+  winEl.textContent = `${teams[winnerIndex].name} gana por tiempo.`;
+}
+
+function tickClocks(now) {
+  const delta = state.lastFrameTime ? now - state.lastFrameTime : 0;
+  state.lastFrameTime = now;
+  if (!state.started || state.winner !== null || state.goalPause) {
+    updateTimerHud();
+    return;
+  }
+
+  state.matchTimeLeft = Math.max(0, state.matchTimeLeft - delta);
+
+  if (!state.turnInProgress && !state.dragging) {
+    state.turnTimeLeft = Math.max(0, state.turnTimeLeft - delta);
+    if (state.turnTimeLeft <= 0) {
+      expireTurnByClock();
+    }
+  }
+
+  if (state.matchTimeLeft <= 0 && state.winner === null) {
+    setWinnerByTime();
+  }
+
+  updateTimerHud();
 }
 
 function updateStatus() {
@@ -1120,7 +1201,9 @@ function nextTurn() {
   state.selected = null;
   recoverKnockouts();
   updateItemsForNewTurn();
+  state.turnTimeLeft = TIMERS.turnMs;
   updateStatus();
+  updateTimerHud();
 }
 
 function recoverKnockouts() {
@@ -1159,7 +1242,8 @@ function updateItemsForNewTurn() {
   }
 }
 
-function update() {
+function update(now = performance.now()) {
+  tickClocks(now);
   if (!state.started) {
     draw();
     requestAnimationFrame(update);
@@ -1612,6 +1696,7 @@ canvas.addEventListener("pointercancel", () => {
 
 initUiAssetFallbacks();
 setupPlayers();
+resetTimers();
 updateStatus();
 update();
 
@@ -1644,6 +1729,7 @@ function showLineupScreen(mode) {
 function configureMatch(mode) {
   state.mode = mode;
   state.playerCount = 4;
+  resetTimers();
   resetPositions(null);
 }
 
