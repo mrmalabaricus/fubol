@@ -1389,9 +1389,11 @@ function renderLineupUI() {
     if (!lineup) return;
     const nameEl = slot.querySelector(".lineup-name");
     const statFills = slot.querySelectorAll(".lineup-stat-fill");
+    const avatarEl = slot.querySelector(".lineup-avatar");
     if (slot.dataset.slot === "goalie") {
       const goalie = rosterGoalkeepers[lineup.goalieIndex];
       if (nameEl) nameEl.textContent = goalie?.name ?? "";
+      setLineupAvatar(avatarEl, goalie?.image);
       const stats = getLineupStats(goalie);
       statFills.forEach((fill) => {
         const key = fill.dataset.stat;
@@ -1404,12 +1406,23 @@ function renderLineupUI() {
     const playerIndex = lineup.playerIndices[slotIndex];
     const player = rosterPlayers[playerIndex];
     if (nameEl) nameEl.textContent = player?.name ?? "";
+    setLineupAvatar(avatarEl, player?.image);
     const stats = getLineupStats(player);
     statFills.forEach((fill) => {
       const key = fill.dataset.stat;
       fill.style.width = `${stats[key] ?? 0}%`;
     });
   });
+}
+
+function setLineupAvatar(avatarEl, imagePath) {
+  if (!avatarEl || !imagePath) return;
+  const record = getImage(imagePath);
+  if (record.loaded) {
+    avatarEl.style.backgroundImage = `url("${imagePath}")`;
+  } else {
+    avatarEl.style.backgroundImage = "";
+  }
 }
 
 function getLineupStats(player) {

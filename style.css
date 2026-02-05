@@ -210,12 +210,13 @@ body:not(.started) .game {
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 6px 8px;
   border-radius: 999px;
   background: rgba(15, 24, 36, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.82);
+  transform-origin: center;
 }
 
 .lineup-slot[data-team="0"][data-slot="goalie"] {
@@ -270,17 +271,20 @@ body:not(.started) .game {
 
 .lineup-card {
   display: grid;
-  grid-template-columns: 52px 1fr;
+  grid-template-columns: 56px 1fr;
   grid-template-rows: auto auto;
-  gap: 6px 10px;
+  gap: 4px 8px;
   align-items: center;
 }
 
 .lineup-avatar {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #ffe2c4, #d2a17a 70%);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border: 2px solid rgba(255, 255, 255, 0.6);
   box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.2);
 }
@@ -308,7 +312,11 @@ body:not(.started) .game {
 .lineup-name {
   font-weight: 700;
   color: #f5f5f5;
-  min-width: 140px;
+  min-width: 90px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .lineup-arrow {
@@ -330,15 +338,15 @@ body:not(.started) .game {
 .lineup-stats {
   grid-column: 2;
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .lineup-stat {
   display: grid;
-  grid-template-columns: 28px 1fr;
+  grid-template-columns: 24px 92px;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  gap: 4px;
+  font-size: 10px;
   color: #d4e1f0;
 }
 
