@@ -10,6 +10,11 @@ const menuScreen = document.getElementById("menuScreen");
 const lineupScreen = document.getElementById("lineupScreen");
 const lineupBack = document.getElementById("lineupBack");
 const lineupStart = document.getElementById("lineupStart");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const gameOverTitle = document.getElementById("gameOverTitle");
+const gameOverScore = document.getElementById("gameOverScore");
+const playAgainBtn = document.getElementById("playAgainBtn");
+const changeSquadBtn = document.getElementById("changeSquadBtn");
 
 const SCALE = 90 / 64;
 const scaleValue = (value) => value * SCALE;
@@ -586,11 +591,13 @@ function setWinnerByTime() {
   if (state.scores[0] === state.scores[1]) {
     state.winner = "draw";
     winEl.textContent = "Tiempo cumplido: empate.";
+    showGameOverOverlay(getWinnerTitle());
     return;
   }
   const winnerIndex = state.scores[0] > state.scores[1] ? 0 : 1;
   state.winner = winnerIndex;
   winEl.textContent = `${teams[winnerIndex].name} gana por tiempo.`;
+  showGameOverOverlay(getWinnerTitle());
 }
 
 function tickClocks(now) {
@@ -617,6 +624,24 @@ function tickClocks(now) {
   updateTimerHud();
 }
 
+function showGameOverOverlay(titleText) {
+  gameOverTitle.textContent = titleText;
+  gameOverScore.textContent = `${state.scores[0]} - ${state.scores[1]}`;
+  gameOverScreen.classList.remove("hidden");
+}
+
+function hideGameOverOverlay() {
+  gameOverScreen.classList.add("hidden");
+}
+
+function getWinnerTitle() {
+  if (state.winner === "draw") {
+    return "Empate";
+  }
+  const winnerName = teams[state.winner]?.name ?? "Resultado";
+  return `${winnerName} gana`;
+}
+
 function updateStatus() {
   const team = teams[state.turn];
   statusEl.textContent = `Turno: ${team.name}`;
@@ -628,6 +653,7 @@ function setWinner() {
     const winnerIndex = state.scores[0] > state.scores[1] ? 0 : 1;
     state.winner = winnerIndex;
     winEl.textContent = `${teams[winnerIndex].name} gana por 3 goles de diferencia.`;
+    showGameOverOverlay(getWinnerTitle());
   } else {
     winEl.textContent = "";
   }
@@ -1212,6 +1238,10 @@ function score(teamIndex) {
   state.scores[teamIndex] += 1;
   scoreEl.textContent = `${state.scores[0]} - ${state.scores[1]}`;
   setWinner();
+  if (state.winner !== null) {
+    state.goalPause = false;
+    return;
+  }
   setTimeout(() => {
     resetPositions(teamIndex);
     state.goalPause = false;
@@ -1739,12 +1769,12 @@ update();
 console.info("Assets placeholder:", assets);
 
 function startGame() {
-  if (state.started) return;
   state.started = true;
   document.body.classList.add("started");
   menuScreen.classList.add("hidden");
   startScreen.classList.add("hidden");
   lineupScreen.classList.add("hidden");
+  hideGameOverOverlay();
   configureMatch(state.mode || "quick");
 }
 
@@ -1752,6 +1782,7 @@ function showMenu() {
   startScreen.classList.add("hidden");
   menuScreen.classList.remove("hidden");
   lineupScreen.classList.add("hidden");
+  hideGameOverOverlay();
 }
 
 function showLineupScreen(mode) {
@@ -1765,6 +1796,9 @@ function showLineupScreen(mode) {
 function configureMatch(mode) {
   state.mode = mode;
   state.playerCount = 4;
+  hideGameOverOverlay();
+  state.winner = null;
+  winEl.textContent = "";
   resetTimers();
   resetPositions(null);
 }
@@ -1801,4 +1835,18 @@ lineupBack.addEventListener("click", () => {
 
 lineupStart.addEventListener("click", () => {
   startGame();
+});
+
+
+playAgainBtn.addEventListener("click", () => {
+  configureMatch(state.mode || "quick");
+});
+
+changeSquadBtn.addEventListener("click", () => {
+  hideGameOverOverlay();
+  if (state.mode === "1v1" || state.mode === "cpu") {
+    showLineupScreen(state.mode);
+    return;
+  }
+  menuScreen.classList.remove("hidden");
 });

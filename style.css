@@ -117,6 +117,54 @@ body:not(.started) .game {
 }
 
 
+
+.gameover-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 10, 16, 0.72);
+  z-index: 11;
+  padding: 20px;
+}
+
+.gameover-screen.hidden {
+  display: none;
+}
+
+.gameover-panel {
+  width: min(700px, 92vw);
+  text-align: center;
+  background: rgba(9, 17, 26, 0.96);
+  border: 2px solid rgba(157, 199, 255, 0.35);
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 24px 40px rgba(0, 0, 0, 0.45);
+  display: grid;
+  gap: 16px;
+}
+
+.gameover-panel h2 {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 52px);
+  letter-spacing: 0.04em;
+}
+
+.gameover-score {
+  font-family: "Courier New", "Lucida Console", monospace;
+  font-size: clamp(40px, 9vw, 92px);
+  font-weight: 700;
+  color: #9ff6ff;
+  text-shadow: 0 0 14px rgba(111, 243, 255, 0.65);
+}
+
+.gameover-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 900px) {
   .hud-board {
     grid-template-columns: 1fr;
