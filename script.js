@@ -1387,12 +1387,10 @@ function renderLineupUI() {
     const teamIndex = Number(slot.dataset.team);
     const lineup = getTeamLineup(teamIndex);
     if (!lineup) return;
-    const nameEl = slot.querySelector(".lineup-name");
     const statFills = slot.querySelectorAll(".lineup-stat-fill");
     const avatarEl = slot.querySelector(".lineup-avatar");
     if (slot.dataset.slot === "goalie") {
       const goalie = rosterGoalkeepers[lineup.goalieIndex];
-      if (nameEl) nameEl.textContent = goalie?.name ?? "";
       setLineupAvatar(avatarEl, goalie?.image);
       const stats = getLineupStats(goalie);
       statFills.forEach((fill) => {
@@ -1405,7 +1403,6 @@ function renderLineupUI() {
     if (slotIndex === -1) return;
     const playerIndex = lineup.playerIndices[slotIndex];
     const player = rosterPlayers[playerIndex];
-    if (nameEl) nameEl.textContent = player?.name ?? "";
     setLineupAvatar(avatarEl, player?.image);
     const stats = getLineupStats(player);
     statFills.forEach((fill) => {
