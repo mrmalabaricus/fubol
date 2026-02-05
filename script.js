@@ -1387,16 +1387,42 @@ function renderLineupUI() {
     const teamIndex = Number(slot.dataset.team);
     const lineup = getTeamLineup(teamIndex);
     if (!lineup) return;
-    const value = slot.querySelector(".lineup-value");
+    const nameEl = slot.querySelector(".lineup-name");
+    const statFills = slot.querySelectorAll(".lineup-stat-fill");
     if (slot.dataset.slot === "goalie") {
-      value.textContent = rosterGoalkeepers[lineup.goalieIndex]?.name ?? "";
+      const goalie = rosterGoalkeepers[lineup.goalieIndex];
+      if (nameEl) nameEl.textContent = goalie?.name ?? "";
+      const stats = getLineupStats(goalie);
+      statFills.forEach((fill) => {
+        const key = fill.dataset.stat;
+        fill.style.width = `${stats[key] ?? 0}%`;
+      });
       return;
     }
     const slotIndex = lineupSlots.indexOf(slot.dataset.slot);
     if (slotIndex === -1) return;
     const playerIndex = lineup.playerIndices[slotIndex];
-    value.textContent = rosterPlayers[playerIndex]?.name ?? "";
+    const player = rosterPlayers[playerIndex];
+    if (nameEl) nameEl.textContent = player?.name ?? "";
+    const stats = getLineupStats(player);
+    statFills.forEach((fill) => {
+      const key = fill.dataset.stat;
+      fill.style.width = `${stats[key] ?? 0}%`;
+    });
   });
+}
+
+function getLineupStats(player) {
+  if (!player) {
+    return { hp: 0, pwr: 0, spd: 0 };
+  }
+  const maxHealth = player.maxHealth ?? 100;
+  const strength = player.strength ?? 1;
+  const speed = player.speed ?? 1;
+  const hp = Math.min((maxHealth / 160) * 100, 100);
+  const pwr = Math.min((strength / 1.4) * 100, 100);
+  const spd = Math.min((speed / 1.3) * 100, 100);
+  return { hp, pwr, spd };
 }
 
 function getLineups() {

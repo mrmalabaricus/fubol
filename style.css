@@ -210,8 +210,8 @@ body:not(.started) .game {
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 8px;
+  padding: 8px 10px;
   border-radius: 999px;
   background: rgba(15, 24, 36, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -268,10 +268,34 @@ body:not(.started) .game {
   top: 68%;
 }
 
+.lineup-card {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  grid-template-rows: auto auto;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.lineup-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffe2c4, #d2a17a 70%);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.lineup-slot[data-team="0"] .lineup-avatar {
+  border-color: rgba(74, 163, 255, 0.9);
+}
+
+.lineup-slot[data-team="1"] .lineup-avatar {
+  border-color: rgba(255, 91, 91, 0.9);
+}
+
 .lineup-text {
   display: grid;
   gap: 2px;
-  text-align: center;
 }
 
 .lineup-label {
@@ -281,10 +305,10 @@ body:not(.started) .game {
   letter-spacing: 0.04em;
 }
 
-.lineup-value {
-  font-weight: 600;
+.lineup-name {
+  font-weight: 700;
   color: #f5f5f5;
-  min-width: 120px;
+  min-width: 140px;
 }
 
 .lineup-arrow {
@@ -294,10 +318,54 @@ body:not(.started) .game {
   border-radius: 8px;
   cursor: pointer;
   height: 30px;
+  width: 34px;
+  font-size: 18px;
+  line-height: 1;
 }
 
 .lineup-arrow:hover {
   background: rgba(255, 255, 255, 0.18);
+}
+
+.lineup-stats {
+  grid-column: 2;
+  display: grid;
+  gap: 4px;
+}
+
+.lineup-stat {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #d4e1f0;
+}
+
+.lineup-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lineup-stat-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+}
+
+.lineup-stat-fill[data-stat="hp"] {
+  background: #e25b5b;
+}
+
+.lineup-stat-fill[data-stat="pwr"] {
+  background: #5bb1ff;
+}
+
+.lineup-stat-fill[data-stat="spd"] {
+  background: #f2c94c;
 }
 
 .lineup-actions {
