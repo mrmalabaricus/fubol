@@ -102,11 +102,31 @@ function getImage(src) {
   return record;
 }
 
-function drawImageOrPlaceholder(src, x, y, width, height, color) {
+function drawImageOrPlaceholder(src, x, y, width, height, color = "#888") {
   const record = getImage(src);
   if (record.loaded) {
     ctx.drawImage(record.img, x, y, width, height);
+    return;
   }
+
+  const radius = Math.min(width, height) * 0.22;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, width, height, radius);
+  } else {
+    ctx.rect(x, y, width, height);
+  }
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255,255,255,0.65)";
+  ctx.lineWidth = Math.max(1, Math.min(width, height) * 0.06);
+  ctx.beginPath();
+  ctx.moveTo(x + width * 0.2, y + height * 0.2);
+  ctx.lineTo(x + width * 0.8, y + height * 0.8);
+  ctx.moveTo(x + width * 0.8, y + height * 0.2);
+  ctx.lineTo(x + width * 0.2, y + height * 0.8);
+  ctx.stroke();
 }
 
 function drawFieldBackground() {
@@ -337,6 +357,20 @@ const physics = {
   itemEffectTurns: 2,
   goalWallShrink: 0.6,
 };
+
+
+function initUiAssetFallbacks() {
+  const startLogo = document.querySelector(".start-logo");
+  const startTitle = document.querySelector(".start-title");
+  if (startLogo) {
+    startLogo.addEventListener("error", () => {
+      startLogo.classList.add("hidden");
+      if (startTitle) {
+        startTitle.classList.remove("hidden");
+      }
+    });
+  }
+}
 
 const teams = [
   {
@@ -1576,6 +1610,7 @@ canvas.addEventListener("pointercancel", () => {
   }
 });
 
+initUiAssetFallbacks();
 setupPlayers();
 updateStatus();
 update();

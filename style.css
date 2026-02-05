@@ -85,7 +85,8 @@ body:not(.started) .game {
   inset: 0;
   display: grid;
   place-items: center;
-  background: url("assets/start_bg.png") center/cover no-repeat;
+  background: url("assets/start_bg.png") center/cover no-repeat,
+    radial-gradient(circle at center, #143d24 0%, #0c2717 60%, #07180e 100%);
   z-index: 10;
 }
 
@@ -94,7 +95,8 @@ body:not(.started) .game {
   inset: 0;
   display: grid;
   place-items: center;
-  background: url("assets/menu_bg.png") center/cover no-repeat;
+  background: url("assets/menu_bg.png") center/cover no-repeat,
+    radial-gradient(circle at center, #202f42 0%, #101a28 62%, #09121b 100%);
   z-index: 9;
 }
 
@@ -133,6 +135,22 @@ body:not(.started) .game {
   width: min(480px, 70vw);
   height: auto;
   margin-bottom: 16px;
+}
+
+.start-logo.hidden {
+  display: none;
+}
+
+.start-title {
+  margin: 0 0 12px;
+  font-size: clamp(36px, 8vw, 88px);
+  letter-spacing: 0.08em;
+  color: #f5f5f5;
+  text-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.hidden {
+  display: none !important;
 }
 
 .start-panel p {
