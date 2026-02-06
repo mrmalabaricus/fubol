@@ -125,17 +125,28 @@ body:not(.started) .game {
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
-  padding: 16px 24px;
+  min-width: min(620px, 86vw);
+  max-width: 90vw;
+  padding: 12px 16px;
   border-radius: 14px;
   border: 2px solid rgba(255,255,255,0.55);
   background: rgba(6, 12, 20, 0.9);
+  text-align: center;
+  text-shadow: 0 0 10px rgba(159, 246, 255, 0.6);
+  pointer-events: none;
+}
+
+.center-message img {
+  width: min(620px, 86vw);
+  height: auto;
+  display: block;
+}
+
+.center-message-text {
   color: #ffffff;
   font-size: clamp(22px, 4.5vw, 46px);
   font-weight: 800;
   letter-spacing: 0.04em;
-  text-align: center;
-  text-shadow: 0 0 10px rgba(159, 246, 255, 0.6);
-  pointer-events: none;
 }
 
 .center-message.hidden {

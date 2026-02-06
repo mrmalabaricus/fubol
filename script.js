@@ -16,6 +16,8 @@ const gameOverScore = document.getElementById("gameOverScore");
 const playAgainBtn = document.getElementById("playAgainBtn");
 const changeSquadBtn = document.getElementById("changeSquadBtn");
 const centerMessageEl = document.getElementById("centerMessage");
+const centerMessageImgEl = document.getElementById("centerMessageImg");
+const centerMessageTextEl = document.getElementById("centerMessageText");
 
 const SCALE = 90 / 64;
 const scaleValue = (value) => value * SCALE;
@@ -94,6 +96,12 @@ const itemAssets = {
   extraBall: "assets/extra_ball.png",
   goalWall: "assets/goal_wall.png",
   paralyzeRay: "assets/paralyze_ray.png",
+};
+
+const centerMessageAssets = {
+  kickoff: "assets/msg_kickoff.png",
+  goal: "assets/msg_goal.png",
+  golden: "assets/msg_golden_goal.png",
 };
 
 const imageCache = new Map();
@@ -641,10 +649,26 @@ function hideGameOverOverlay() {
 
 let centerMessageTimer = null;
 
-function showCenterMessage(text, durationMs = 1800) {
-  if (!centerMessageEl) return;
-  centerMessageEl.textContent = text;
+function showCenterMessage(messageKey, durationMs = 1800, fallbackText = "") {
+  if (!centerMessageEl || !centerMessageTextEl || !centerMessageImgEl) return;
+  centerMessageEl.dataset.messageKey = messageKey;
   centerMessageEl.classList.remove("hidden");
+
+  const src = centerMessageAssets[messageKey];
+  const record = src ? getImage(src) : null;
+  const useImage = Boolean(record && record.loaded);
+
+  if (useImage) {
+    centerMessageImgEl.src = src;
+    centerMessageImgEl.classList.remove("hidden");
+    centerMessageTextEl.classList.add("hidden");
+  } else {
+    centerMessageTextEl.textContent = fallbackText || messageKey.toUpperCase();
+    centerMessageTextEl.classList.remove("hidden");
+    centerMessageImgEl.classList.add("hidden");
+    centerMessageImgEl.removeAttribute("src");
+  }
+
   if (centerMessageTimer) {
     clearTimeout(centerMessageTimer);
     centerMessageTimer = null;
@@ -658,16 +682,18 @@ function showCenterMessage(text, durationMs = 1800) {
 }
 
 function hideCenterMessage() {
-  if (!centerMessageEl) return;
+  if (!centerMessageEl || !centerMessageImgEl || !centerMessageTextEl) return;
   if (centerMessageTimer) {
     clearTimeout(centerMessageTimer);
     centerMessageTimer = null;
   }
   centerMessageEl.classList.add("hidden");
+  centerMessageImgEl.classList.add("hidden");
+  centerMessageTextEl.classList.add("hidden");
 }
 
 function showKickOffMessage() {
-  showCenterMessage("KICK OFF", 1400);
+  showCenterMessage("kickoff", 1400, "KICK OFF");
 }
 
 function startGoldenGoal() {
@@ -676,7 +702,7 @@ function startGoldenGoal() {
   winEl.textContent = "Empate: gol de oro";
   state.turn = state.turn === 0 ? 1 : 0;
   resetPositions(null);
-  showCenterMessage("GOL DE ORO", 2200);
+  showCenterMessage("golden", 2200, "GOL DE ORO");
 }
 
 function lockMatchControls() {
@@ -1322,7 +1348,7 @@ function handlePlayerCollisions(entities) {
 
 function score(teamIndex, scoredBall = null) {
   if (state.goalPause) return;
-  showCenterMessage("GOOOOOL", 1100);
+  showCenterMessage("goal", 1100, "GOOOOOL");
   spawnConfetti(teamIndex);
   state.goalPause = true;
   if (scoredBall) {
