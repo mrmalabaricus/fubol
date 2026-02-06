@@ -15,6 +15,7 @@ const gameOverTitle = document.getElementById("gameOverTitle");
 const gameOverScore = document.getElementById("gameOverScore");
 const playAgainBtn = document.getElementById("playAgainBtn");
 const changeSquadBtn = document.getElementById("changeSquadBtn");
+const centerMessageEl = document.getElementById("centerMessage");
 
 const SCALE = 90 / 64;
 const scaleValue = (value) => value * SCALE;
@@ -355,6 +356,7 @@ const state = {
   matchTimeLeft: TIMERS.matchMs,
   turnTimeLeft: TIMERS.turnMs,
   lastFrameTime: 0,
+  goldenGoalActive: false,
 };
 
 const physics = {
@@ -589,10 +591,7 @@ function expireTurnByClock() {
 
 function setWinnerByTime() {
   if (state.scores[0] === state.scores[1]) {
-    state.winner = "draw";
-    winEl.textContent = "Tiempo cumplido: empate.";
-    lockMatchControls();
-    showGameOverOverlay(getWinnerTitle());
+    startGoldenGoal();
     return;
   }
   const winnerIndex = state.scores[0] > state.scores[1] ? 0 : 1;
@@ -610,7 +609,11 @@ function tickClocks(now) {
     return;
   }
 
-  state.matchTimeLeft = Math.max(0, state.matchTimeLeft - delta);
+  if (!state.goldenGoalActive) {
+    state.matchTimeLeft = Math.max(0, state.matchTimeLeft - delta);
+  } else {
+    state.matchTimeLeft = 0;
+  }
 
   if (!state.turnInProgress) {
     state.turnTimeLeft = Math.max(0, state.turnTimeLeft - delta);
@@ -619,7 +622,7 @@ function tickClocks(now) {
     }
   }
 
-  if (state.matchTimeLeft <= 0 && state.winner === null) {
+  if (!state.goldenGoalActive && state.matchTimeLeft <= 0 && state.winner === null) {
     setWinnerByTime();
   }
 
@@ -634,6 +637,42 @@ function showGameOverOverlay(titleText) {
 
 function hideGameOverOverlay() {
   gameOverScreen.classList.add("hidden");
+}
+
+let centerMessageTimer = null;
+
+function showCenterMessage(text, durationMs = 1800) {
+  if (!centerMessageEl) return;
+  centerMessageEl.textContent = text;
+  centerMessageEl.classList.remove("hidden");
+  if (centerMessageTimer) {
+    clearTimeout(centerMessageTimer);
+    centerMessageTimer = null;
+  }
+  if (durationMs > 0) {
+    centerMessageTimer = setTimeout(() => {
+      centerMessageEl.classList.add("hidden");
+      centerMessageTimer = null;
+    }, durationMs);
+  }
+}
+
+function hideCenterMessage() {
+  if (!centerMessageEl) return;
+  if (centerMessageTimer) {
+    clearTimeout(centerMessageTimer);
+    centerMessageTimer = null;
+  }
+  centerMessageEl.classList.add("hidden");
+}
+
+function startGoldenGoal() {
+  state.goldenGoalActive = true;
+  state.matchTimeLeft = 0;
+  winEl.textContent = "Empate: gol de oro";
+  state.turn = state.turn === 0 ? 1 : 0;
+  resetPositions(null);
+  showCenterMessage("GOL DE ORO", 2200);
 }
 
 function lockMatchControls() {
@@ -1260,6 +1299,15 @@ function score(teamIndex) {
   state.goalPause = true;
   state.scores[teamIndex] += 1;
   scoreEl.textContent = `${state.scores[0]} - ${state.scores[1]}`;
+  if (state.goldenGoalActive) {
+    state.goldenGoalActive = false;
+    state.winner = teamIndex;
+    winEl.textContent = `Gol de oro: ${teams[teamIndex].name} gana.`;
+    lockMatchControls();
+    showGameOverOverlay(getWinnerTitle());
+    state.goalPause = false;
+    return;
+  }
   setWinner();
   if (state.winner !== null) {
     state.goalPause = false;
@@ -1834,6 +1882,8 @@ function configureMatch(mode) {
   state.turn = 0;
   state.goalPause = false;
   state.confetti = [];
+  state.goldenGoalActive = false;
+  hideCenterMessage();
   state.scores = [0, 0];
   scoreEl.textContent = "0 - 0";
   winEl.textContent = "";
