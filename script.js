@@ -666,6 +666,10 @@ function hideCenterMessage() {
   centerMessageEl.classList.add("hidden");
 }
 
+function showKickOffMessage() {
+  showCenterMessage("KICK OFF", 1400);
+}
+
 function startGoldenGoal() {
   state.goldenGoalActive = true;
   state.matchTimeLeft = 0;
@@ -1295,6 +1299,7 @@ function handlePlayerCollisions(entities) {
 
 function score(teamIndex) {
   if (state.goalPause) return;
+  showCenterMessage("GOOOOOL", 1100);
   spawnConfetti(teamIndex);
   state.goalPause = true;
   state.scores[teamIndex] += 1;
@@ -1890,6 +1895,7 @@ function configureMatch(mode) {
   setupPlayers();
   resetTimers();
   resetPositions(null);
+  showKickOffMessage();
 }
 
 startScreen.addEventListener("pointerdown", showMenu);
