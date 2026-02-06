@@ -66,6 +66,8 @@ const TIMERS = {
   turnMs: 15 * 1000,
 };
 
+const SPECIAL_SHOT_KEYS = ["curve", "power", "lob"];
+
 canvas.width = Math.round(DIMENSIONS.fieldWidth);
 canvas.height = Math.round(DIMENSIONS.fieldHeight);
 
@@ -381,6 +383,9 @@ const physics = {
   itemBounce: 0.4,
   itemEffectTurns: 2,
   goalWallShrink: 0.6,
+  perfectPoint: 0.78,
+  perfectWindow: 0.035,
+  specialShotHealthCost: 12,
 };
 
 
@@ -422,7 +427,60 @@ const ball = {
   radius: DIMENSIONS.ballRadius,
   vx: 0,
   vy: 0,
+  specialShot: null,
+  arcFrames: 0,
+  arcFrame: 0,
 };
+
+function pickRandomSpecialShot() {
+  return SPECIAL_SHOT_KEYS[Math.floor(Math.random() * SPECIAL_SHOT_KEYS.length)];
+}
+
+function applySpecialShotToBall(player, ballObj, powerRatio) {
+  if (!player || !ballObj) return;
+  const specialType = player.specialShotKey;
+  if (!specialType) return;
+
+  if (player.health <= physics.specialShotHealthCost) {
+    return;
+  }
+
+  player.health = Math.max(0, player.health - physics.specialShotHealthCost);
+  if (player.health === 0) {
+    player.koTurns = physics.koTurns;
+    player.vx = 0;
+    player.vy = 0;
+  }
+
+  showCenterMessage("perfect", 900, "PERFECT SHOOT!");
+
+  ballObj.specialShot = null;
+  ballObj.arcFrames = 0;
+  ballObj.arcFrame = 0;
+
+  if (specialType === "curve") {
+    ballObj.specialShot = {
+      type: "curve",
+      framesLeft: 60,
+      curveStrength: 0.08 * SCALE,
+      curveDirection: player.team === 0 ? 1 : -1,
+    };
+  } else if (specialType === "power") {
+    ballObj.vx *= 1.35;
+    ballObj.vy *= 1.35;
+  } else if (specialType === "lob") {
+    ballObj.vx *= 1.08;
+    ballObj.vy *= 1.08;
+    ballObj.arcFrames = 45;
+    ballObj.arcFrame = 0;
+  }
+}
+
+function getBallRenderScale(ballObj) {
+  if (!ballObj.arcFrames || ballObj.arcFrame <= 0) return 1;
+  const progress = Math.min(ballObj.arcFrame / ballObj.arcFrames, 1);
+  return 1 + Math.sin(progress * Math.PI) * 0.35;
+}
 
 function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
   const profileBase = isGoalie
@@ -445,6 +503,7 @@ function createPlayer(teamIndex, x, y, playerConfig, isGoalie = false) {
     vx: 0,
     vy: 0,
     isGoalie,
+    specialShotKey: isGoalie ? null : playerConfig.specialShotKey ?? pickRandomSpecialShot(),
     maxHealth: profile.maxHealth,
     health: profile.maxHealth,
     koTurns: 0,
@@ -480,6 +539,9 @@ function resetPositions(scoringTeam) {
   ball.y = field.center.y;
   ball.vx = 0;
   ball.vy = 0;
+  ball.specialShot = null;
+  ball.arcFrames = 0;
+  ball.arcFrame = 0;
   state.extraBalls = [];
   state.goalWalls = [];
 
@@ -940,7 +1002,8 @@ function drawParalyzeRay(player) {
 }
 
 function drawBall() {
-  const size = ball.radius * 2;
+  const scale = getBallRenderScale(ball);
+  const size = ball.radius * 2 * scale;
   drawImageOrPlaceholder(
     assets.ball,
     ball.x - size / 2,
@@ -953,7 +1016,8 @@ function drawBall() {
 
 function drawExtraBalls() {
   state.extraBalls.forEach((extra) => {
-    const size = extra.radius * 2;
+    const scale = getBallRenderScale(extra);
+    const size = extra.radius * 2 * scale;
     drawImageOrPlaceholder(
       itemAssets.extraBall,
       extra.x - size / 2,
@@ -1041,6 +1105,13 @@ function drawAimGuide() {
   ctx.fillRect(barX, barY, barWidth, barHeight);
   ctx.fillStyle = `rgba(255, ${Math.round(160 + power * 80)}, 80, 0.9)`;
   ctx.fillRect(barX, barY, barWidth * power, barHeight);
+  const perfectX = barX + barWidth * physics.perfectPoint;
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.beginPath();
+  ctx.moveTo(perfectX, barY - 2);
+  ctx.lineTo(perfectX, barY + barHeight + 2);
+  ctx.stroke();
+
   ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
   ctx.strokeRect(barX, barY, barWidth, barHeight);
 }
@@ -1517,10 +1588,28 @@ function getAllBalls() {
 }
 
 function applyBallPhysics(ballObj) {
+  if (ballObj.specialShot?.type === "curve" && ballObj.specialShot.framesLeft > 0) {
+    const speed = Math.hypot(ballObj.vx, ballObj.vy);
+    if (speed > 0.05) {
+      const nx = -ballObj.vy / speed;
+      const ny = ballObj.vx / speed;
+      ballObj.vx += nx * ballObj.specialShot.curveStrength * ballObj.specialShot.curveDirection;
+      ballObj.vy += ny * ballObj.specialShot.curveStrength * ballObj.specialShot.curveDirection;
+    }
+    ballObj.specialShot.framesLeft -= 1;
+    if (ballObj.specialShot.framesLeft <= 0) {
+      ballObj.specialShot = null;
+    }
+  }
+
   ballObj.x += ballObj.vx;
   ballObj.y += ballObj.vy;
   ballObj.vx *= physics.friction;
   ballObj.vy *= physics.friction;
+
+  if (ballObj.arcFrames > 0 && ballObj.arcFrame < ballObj.arcFrames) {
+    ballObj.arcFrame += 1;
+  }
 
   if (Math.abs(ballObj.vx) < physics.minSpeed) ballObj.vx = 0;
   if (Math.abs(ballObj.vy) < physics.minSpeed) ballObj.vy = 0;
@@ -1887,10 +1976,16 @@ canvas.addEventListener("pointerup", (event) => {
   const distance = Math.min(Math.hypot(dx, dy), DIMENSIONS.aimGuideMax);
   const angle = Math.atan2(dy, dx) + Math.PI;
   const speedFactor = state.selected.profile?.speed ?? 1;
-  const power = (distance / DIMENSIONS.aimGuideMax) * physics.maxPower * speedFactor;
+  const powerRatio = distance / DIMENSIONS.aimGuideMax;
+  const power = powerRatio * physics.maxPower * speedFactor;
 
   state.selected.vx = Math.cos(angle) * power;
   state.selected.vy = Math.sin(angle) * power;
+
+  const isPerfectShot = Math.abs(powerRatio - physics.perfectPoint) <= physics.perfectWindow;
+  if (isPerfectShot) {
+    applySpecialShotToBall(state.selected, ball, powerRatio);
+  }
   state.turnInProgress = true;
   state.dragging = false;
   state.dragStart = null;
