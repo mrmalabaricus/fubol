@@ -1190,7 +1190,7 @@ function keepBallInBounds(ballObj) {
         ballObj.vx = Math.abs(ballObj.vx) * 0.8;
         ballObj.x = DIMENSIONS.fieldPadding + wallThickness + ballObj.radius;
       } else {
-        score(1);
+        score(1, ballObj);
       }
     } else {
       ballObj.vx *= -0.8;
@@ -1209,7 +1209,7 @@ function keepBallInBounds(ballObj) {
         ballObj.x =
           field.width - DIMENSIONS.fieldPadding - wallThickness - ballObj.radius;
       } else {
-        score(0);
+        score(0, ballObj);
       }
     } else {
       ballObj.vx *= -0.8;
@@ -1320,11 +1320,21 @@ function handlePlayerCollisions(entities) {
   }
 }
 
-function score(teamIndex) {
+function score(teamIndex, scoredBall = null) {
   if (state.goalPause) return;
   showCenterMessage("GOOOOOL", 1100);
   spawnConfetti(teamIndex);
   state.goalPause = true;
+  if (scoredBall) {
+    const crossOffset = scoredBall.radius * 0.65;
+    if (teamIndex === 1) {
+      scoredBall.x = DIMENSIONS.fieldPadding - crossOffset;
+    } else {
+      scoredBall.x = field.width - DIMENSIONS.fieldPadding + crossOffset;
+    }
+    scoredBall.vx = 0;
+    scoredBall.vy = 0;
+  }
   state.scores[teamIndex] += 1;
   scoreEl.textContent = `${state.scores[0]} - ${state.scores[1]}`;
   if (state.goldenGoalActive) {
