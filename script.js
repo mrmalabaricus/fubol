@@ -776,6 +776,26 @@ function drawGoal(teamIndex) {
   ctx.strokeRect(x, goalY, field.goalDepth, goalMouth.height);
 }
 
+function drawGoalLineOverlay() {
+  const leftGoal = getGoalMouth(0);
+  const rightGoal = getGoalMouth(1);
+
+  ctx.save();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+
+  ctx.beginPath();
+  ctx.moveTo(DIMENSIONS.fieldPadding, leftGoal.top);
+  ctx.lineTo(DIMENSIONS.fieldPadding, leftGoal.bottom);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(field.width - DIMENSIONS.fieldPadding, rightGoal.top);
+  ctx.lineTo(field.width - DIMENSIONS.fieldPadding, rightGoal.bottom);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function isTurnSelectablePlayer(player) {
   if (!player || player.team !== state.turn) return false;
   if (player.koTurns > 0 || player.paralyzedTurns > 0) return false;
@@ -1018,6 +1038,9 @@ function draw() {
   teams.forEach((team) => drawPlayer(team.goalie, showTurnHighlights, pulse));
   drawBall();
   drawExtraBalls();
+  drawGoalLineOverlay();
+  drawGoal(0);
+  drawGoal(1);
   drawAimGuide();
   drawConfetti();
 }
