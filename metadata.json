@@ -1,0 +1,12 @@
+
+{
+  "name": "Tejo Fútbol Slider Pro",
+  "short_name": "FubolPro",
+  "description": "Un juego de fútbol táctico de alto rendimiento con físicas realistas, formaciones estratégicas y oponentes de IA.",
+  "categories": ["sports", "strategy", "action"],
+  "theme_color": "#0a0f15",
+  "background_color": "#0a0f15",
+  "display": "standalone",
+  "orientation": "landscape",
+  "requestFramePermissions": []
+}
