@@ -1,45 +1,4 @@
-
-import { PlayerStats, Tactic } from './types';
-
-/**
- * ============================================================================
- * MANIFIESTO DE ACTIVOS PARA DISEÑO (DESIGN SPECS)
- * ============================================================================
- * 
- * Este bloque sirve de guía para el equipo de arte y UI/UX.
- * Dimensiones base del proyecto: 1280x720 (16:9)
- * 
- * 1. CAMPO DE JUEGO (FIELD)
- *    - Pitch: 1280x720px. Textura de césped con franjas verticales.
- *    - Líneas: Blanco puro (opacity 0.6). Grosor: 4px.
- *    - Áreas: 220px ancho x 400px alto.
- *    - Porterías: 240px de ancho. Profundidad: 40px. Redes con transparencia.
- * 
- * 2. JUGADORES (PLAYERS)
- *    - Diámetro: 68px (Radio 34px).
- *    - Local (Team 0): Color base #3f85ff. Bordes dorados para el seleccionado.
- *    - Visitante (Team 1): Color base #ff5757.
- *    - Estados: Stamina bar (6px alto), Aura de poder (glow amarillo).
- * 
- * 3. BALÓN (BALL)
- *    - Diámetro: 36px (Radio 18px).
- *    - Assets: Sprite circular, sombreado dinámico, rotación fluida de 360°.
- * 
- * 4. POWER-UPS
- *    - Tamaño: 50x50px.
- *    - Estética: Iconos neón con pulso dinámico.
- *    - Tipos: ⚡ (Power), ⚽⚽ (Multi), 🥅 (Shrink).
- * 
- * 5. UI / HUD
- *    - Scoreboard: Glassmorphism (blur 12px), bordes redondeados.
- *    - Tipografía: Fuente Sans-Serif Black/Heavy para números y títulos.
- *    - Botones: Naranja (#f97316) con sombreado 3D y efecto de presión.
- * 
- * 6. VFX / OVERLAYS
- *    - Goal Screen: Texto "¡GOOOOL!" masivo (14rem) con contorno amarillo.
- *    - Golden Goal: Overlay de alto contraste, tonos amarillos y negros.
- * ============================================================================
- */
+import { PlayerStats, Tactic, GameState, GameScreen } from './types';
 
 export const DIM = {
   width: 1280,
@@ -47,8 +6,8 @@ export const DIM = {
   padding: 60,
   goalW: 240,
   goalDepth: 40,
-  pRadius: 34, // Tamaño visual del disco de jugador
-  bRadius: 18, // Tamaño visual del balón
+  pRadius: 34,
+  bRadius: 18,
   areaW: 220,
   areaH: 400
 };
@@ -96,3 +55,22 @@ export const TACTICS: Tactic[] = [
     coords: [{ x: 100, y: 250 }, { x: 250, y: 100 }, { x: 220, y: 250 }, { x: 250, y: 400 }, { x: 580, y: 250 }]
   }
 ];
+
+export const INITIAL_GAME_STATE: GameState = {
+  scores: [0, 0],
+  turn: 0,
+  matchTime: 180000,
+  turnTimer: 15000,
+  screen: GameScreen.START,
+  currentTacticIdx: 0,
+  selectedPlayers: [0, 0, 1, 2, 3],
+  turnInProgress: false,
+  goalPause: false,
+  isGoldenGoal: false,
+  activeEffects: {
+    shrinkGoalTeam: null,
+    shrinkGoalUntil: 0,
+    multiBallUntil: 0
+  },
+  goalScorers: []
+};
