@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,72 +7,39 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Tejo Fútbol Slider Pro | Juego de Fútbol Táctico</title>
   
-  <!-- SEO & Social Meta -->
   <meta name="description" content="Domina la cancha en este juego de fútbol táctico con físicas orgánicas. Elige tu formación y vence a la IA." />
-  <meta property="og:title" content="Tejo Fútbol Slider Pro" />
-  <meta property="og:description" content="Fútbol táctico de alta velocidad directamente en tu navegador." />
-  <meta property="og:type" content="website" />
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg-color: #0a0f15;
-    }
+    :root { --bg-color: #0a0f15; }
     body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
+      margin: 0; padding: 0; overflow: hidden;
       background-color: var(--bg-color);
-      user-select: none;
-      -webkit-touch-callout: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: none;
+      user-select: none; touch-action: none;
       font-family: system-ui, -apple-system, sans-serif;
     }
-    #root {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    canvas {
-      image-rendering: auto;
-    }
-    /* Pantalla de carga inicial */
+    #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
     #initial-loader {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.5s ease;
+      position: fixed; inset: 0; background: var(--bg-color);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity 0.5s ease;
     }
     .spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(255,255,255,0.1);
-      border-top-color: #f97316;
-      border-radius: 50%;
+      width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1);
+      border-top-color: #f97316; border-radius: 50%;
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes blink { 50% { opacity: 0.3; } }
-    .danger-timer { animation: blink 0.5s infinite; }
   </style>
 <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "vite": "https://esm.sh/vite@^7.3.1"
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body>
   <div id="initial-loader">
@@ -81,8 +47,9 @@
     <p style="color: white; margin-top: 20px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; font-size: 12px; opacity: 0.5;">Cargando Fubol Pro...</p>
   </div>
   <div id="root"></div>
+  <!-- Vite procesará este archivo directamente -->
+  <script type="module" src="/index.tsx"></script>
   <script>
-    // Remover el loader cuando React esté listo
     window.addEventListener('load', () => {
       setTimeout(() => {
         const loader = document.getElementById('initial-loader');
@@ -91,6 +58,5 @@
       }, 1000);
     });
   </script>
-<script type="module" src="/index.tsx"></script>
 </body>
 </html>
