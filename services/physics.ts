@@ -20,9 +20,11 @@ export const resolveCollisions = (players: Player[], balls: Ball[]) => {
         const ang = Math.atan2(dy, dx);
         const overlap = (minDist - d) * 1.1;
         
-        // El estrechamiento de tipo debe ocurrir directamente en la condición para que TS lo reconozca
-        const aStatic = isPlayer(a) && a.role === 'g';
-        const bStatic = isPlayer(b) && b.role === 'g';
+        // Estrechamiento de tipo explícito para el compilador
+        const isAPlayer = isPlayer(a);
+        const isBPlayer = isPlayer(b);
+        const aStatic = isAPlayer && a.role === 'g';
+        const bStatic = isBPlayer && b.role === 'g';
 
         if (aStatic && !bStatic) {
           b.x -= Math.cos(ang) * overlap;
@@ -42,8 +44,8 @@ export const resolveCollisions = (players: Player[], balls: Ball[]) => {
         const v1n = a.vx * Math.cos(ang) + a.vy * Math.sin(ang);
         const v2n = b.vx * Math.cos(ang) + b.vy * Math.sin(ang);
         
-        const pwrA = isPlayer(a) ? (a.stats.pwr / 100) : 0.4;
-        const pwrB = isPlayer(b) ? (b.stats.pwr / 100) : 0.4;
+        const pwrA = isAPlayer ? (a.stats.pwr / 100) : 0.4;
+        const pwrB = isBPlayer ? (b.stats.pwr / 100) : 0.4;
         
         const impulse = (v1n - v2n) * GAME_PHYSICS.collisionElasticity;
 
