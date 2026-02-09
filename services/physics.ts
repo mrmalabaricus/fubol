@@ -2,7 +2,7 @@ import { Player, Ball } from '../types';
 import { DIM as FIELD_DIM, PHYSICS as GAME_PHYSICS } from '../constants';
 
 function isPlayer(obj: Player | Ball): obj is Player {
-  return 'role' in obj;
+  return (obj as Player).role !== undefined;
 }
 
 export const resolveCollisions = (players: Player[], balls: Ball[]) => {
@@ -22,8 +22,8 @@ export const resolveCollisions = (players: Player[], balls: Ball[]) => {
         
         const aIsP = isPlayer(a);
         const bIsP = isPlayer(b);
-        const aStatic = (aIsP && a.role === 'g');
-        const bStatic = (bIsP && b.role === 'g');
+        const aStatic = aIsP && a.role === 'g';
+        const bStatic = bIsP && b.role === 'g';
 
         if (aStatic && !bStatic) {
           b.x -= Math.cos(ang) * overlap;
