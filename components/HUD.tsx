@@ -35,7 +35,7 @@ const HUD: React.FC<HUDProps> = ({ gameState }) => {
           ) : (
             <span className="tabular-nums">{timeStr}</span>
           )}
-          <div className={`px-3 py-0.5 rounded text-sm font-bold bg-white/10 transition-colors duration-200 ${isDanger ? 'text-red-500 bg-red-500/20 danger-timer' : 'text-yellow-400'}`}>
+          <div className={`px-3 py-0.5 rounded text-sm font-bold bg-white/10 transition-all duration-200 ${isDanger ? 'danger-timer' : 'text-yellow-400'}`}>
             {turnSec}s
           </div>
         </div>
