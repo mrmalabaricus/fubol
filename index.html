@@ -29,6 +29,12 @@
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    
+    @keyframes pulse-danger {
+      0%, 100% { transform: scale(1); color: #facc15; }
+      50% { transform: scale(1.15); color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+    }
+    .danger-timer { animation: pulse-danger 0.5s ease-in-out infinite; }
   </style>
 <script type="importmap">
 {
