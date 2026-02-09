@@ -1,6 +1,10 @@
 import { Player, Ball } from '../types';
 import { DIM as FIELD_DIM, PHYSICS as GAME_PHYSICS } from '../constants';
 
+function isPlayer(obj: Player | Ball): obj is Player {
+  return 'role' in obj;
+}
+
 export const resolveCollisions = (players: Player[], balls: Ball[]) => {
   const all: (Player | Ball)[] = [...players, ...balls];
   for (let i = 0; i < all.length; i++) {
@@ -14,12 +18,13 @@ export const resolveCollisions = (players: Player[], balls: Ball[]) => {
 
       if (d < minDist) {
         const ang = Math.atan2(dy, dx);
-        const overlap = (minDist - d) * 1.1; // Margen extra para asegurar separación completa
+        const overlap = (minDist - d) * 1.1;
         
-        const aStatic = ('role' in a && a.role === 'g');
-        const bStatic = ('role' in b && b.role === 'g');
+        const aIsP = isPlayer(a);
+        const bIsP = isPlayer(b);
+        const aStatic = (aIsP && a.role === 'g');
+        const bStatic = (bIsP && b.role === 'g');
 
-        // Si uno es portero (estático ante empujes), el otro se mueve toda la distancia
         if (aStatic && !bStatic) {
           b.x -= Math.cos(ang) * overlap;
           b.y -= Math.sin(ang) * overlap;
@@ -27,7 +32,6 @@ export const resolveCollisions = (players: Player[], balls: Ball[]) => {
           a.x += Math.cos(ang) * overlap;
           a.y += Math.sin(ang) * overlap;
         } else {
-          // Ambos se mueven la mitad
           const moveX = Math.cos(ang) * (overlap / 2);
           const moveY = Math.sin(ang) * (overlap / 2);
           a.x += moveX;
@@ -39,12 +43,11 @@ export const resolveCollisions = (players: Player[], balls: Ball[]) => {
         const v1n = a.vx * Math.cos(ang) + a.vy * Math.sin(ang);
         const v2n = b.vx * Math.cos(ang) + b.vy * Math.sin(ang);
         
-        const pwrA = 'stats' in a ? (a.stats.pwr / 100) : 0.4;
-        const pwrB = 'stats' in b ? (b.stats.pwr / 100) : 0.4;
+        const pwrA = aIsP ? (a.stats.pwr / 100) : 0.4;
+        const pwrB = bIsP ? (b.stats.pwr / 100) : 0.4;
         
         const impulse = (v1n - v2n) * GAME_PHYSICS.collisionElasticity;
 
-        // Si es un portero, rebota el balón con su propia inercia
         if (aStatic) {
           b.vx += impulse * Math.cos(ang) * 1.2;
           b.vy += impulse * Math.sin(ang) * 1.2;
@@ -65,8 +68,8 @@ export const resolveCollisions = (players: Player[], balls: Ball[]) => {
 export const checkBounds = (obj: Player | Ball) => {
   const p = FIELD_DIM.padding;
   const r = obj.radius;
-  const isPlayer = 'role' in obj;
-  const isGoaler = isPlayer && obj.role === 'g';
+  const isP = isPlayer(obj);
+  const isGoaler = isP && obj.role === 'g';
   const isInsideGoalY = obj.y > FIELD_DIM.height / 2 - FIELD_DIM.goalW / 2 && 
                        obj.y < FIELD_DIM.height / 2 + FIELD_DIM.goalW / 2;
 
@@ -85,7 +88,6 @@ export const checkBounds = (obj: Player | Ball) => {
     return;
   }
 
-  // Vertical bounds (Paredes laterales)
   if (obj.y < p + r) {
     obj.y = p + r;
     obj.vy *= GAME_PHYSICS.wallBounciness;
@@ -96,9 +98,8 @@ export const checkBounds = (obj: Player | Ball) => {
     obj.vx *= 0.98;
   }
 
-  // Horizontal bounds (Líneas de fondo y Porterías)
   if (obj.x < p + r) {
-    if (!isPlayer && isInsideGoalY) {
+    if (!isP && isInsideGoalY) {
       if (obj.y < FIELD_DIM.height / 2 - FIELD_DIM.goalW / 2 + r) {
         obj.y = FIELD_DIM.height / 2 - FIELD_DIM.goalW / 2 + r;
         obj.vy *= GAME_PHYSICS.wallBounciness * 0.6;
@@ -119,7 +120,7 @@ export const checkBounds = (obj: Player | Ball) => {
       obj.vx *= GAME_PHYSICS.wallBounciness;
     }
   } else if (obj.x > FIELD_DIM.width - p - r) {
-    if (!isPlayer && isInsideGoalY) {
+    if (!isP && isInsideGoalY) {
       if (obj.y < FIELD_DIM.height / 2 - FIELD_DIM.goalW / 2 + r) {
         obj.y = FIELD_DIM.height / 2 - FIELD_DIM.goalW / 2 + r;
         obj.vy *= GAME_PHYSICS.wallBounciness * 0.6;
