@@ -2,7 +2,7 @@ import { Player, Ball } from '../types';
 import { DIM as FIELD_DIM, PHYSICS as GAME_PHYSICS } from '../constants';
 
 function isPlayer(obj: Player | Ball): obj is Player {
-  return (obj as Player).role !== undefined;
+  return 'role' in obj;
 }
 
 export const resolveCollisions = (players: Player[], balls: Ball[]) => {
